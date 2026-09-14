@@ -39,3 +39,4 @@ TENANCY_BASE_HOST=localhost
 3. Prefer wildcard SSL
 4. `DB_DRIVER=mysql`, central DB `daksa_erp`
 5. App user needs `CREATE DATABASE` privilege (or equivalent) for provisioning
+6. SSL: set `TENANCY_SSL_AUTO=true` so new tenant subdomains are added to the Let's Encrypt cert automatically (requires `/usr/local/bin/daksa-erp-ssl-sync` + sudoers). Prefer a Cloudflare wildcard later for unlimited tenants.

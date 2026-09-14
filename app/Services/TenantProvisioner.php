@@ -11,11 +11,13 @@ use App\Models\User;
 use App\Support\TenantDatabaseManager;
 use Database\Seeders\PermissionCatalogSeeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 class TenantProvisioner
 {
-    public function __construct(protected TenantDatabaseManager $databases) {}
+    public function __construct(
+        protected TenantDatabaseManager $databases,
+        protected TenantSslProvisioner $ssl,
+    ) {}
 
     /**
      * @param  array{name: string, slug: string, status: string, plan_id: int, admin_name?: string|null, admin_email?: string|null, admin_password?: string|null}  $data
@@ -56,6 +58,8 @@ class TenantProvisioner
         } finally {
             $this->databases->disconnect();
         }
+
+        $this->ssl->sync();
 
         return $tenant->fresh(['activeSubscription.plan']);
     }
