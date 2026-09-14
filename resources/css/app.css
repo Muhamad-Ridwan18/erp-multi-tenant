@@ -18,6 +18,46 @@ body {
     line-height: 1.1;
 }
 
+/*
+ * Vite/LightningCSS polyfills light-dark() in a way that can leave a dark
+ * navbar with light background (white text on white). Force readable contrast.
+ */
+.navbar-vertical[data-bs-theme='dark'] {
+    --tblr-navbar-bg: #1f2937;
+    --tblr-navbar-border-color: rgba(255, 255, 255, 0.08);
+    --tblr-navbar-color: rgba(255, 255, 255, 0.78);
+    --tblr-navbar-hover-color: #fff;
+    --tblr-navbar-active-color: #fff;
+    --tblr-navbar-active-bg: rgba(255, 255, 255, 0.08);
+    --tblr-navbar-brand-color: #fff;
+    --tblr-navbar-disabled-color: rgba(255, 255, 255, 0.35);
+    --tblr-nav-link-color: rgba(255, 255, 255, 0.78);
+    --tblr-nav-link-hover-color: #fff;
+    --tblr-nav-link-icon-color: rgba(255, 255, 255, 0.55);
+    color: rgba(255, 255, 255, 0.78);
+    background-color: #1f2937;
+}
+
+.navbar-vertical[data-bs-theme='dark'] .nav-link,
+.navbar-vertical[data-bs-theme='dark'] .nav-link-title,
+.navbar-vertical[data-bs-theme='dark'] .navbar-brand-text {
+    color: inherit;
+}
+
+.navbar-vertical[data-bs-theme='dark'] .nav-section-title {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.navbar-vertical[data-bs-theme='dark'] .text-secondary {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.navbar-vertical[data-bs-theme='dark'] .nav-link.active,
+.navbar-vertical[data-bs-theme='dark'] .nav-item.active > .nav-link {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
 .navbar-vertical .nav-link-icon .ti {
     font-size: 1.25rem;
     line-height: 1;
