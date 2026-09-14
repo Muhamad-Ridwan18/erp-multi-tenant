@@ -105,7 +105,7 @@ class MvpModulesTest extends TestCase
             ->post('http://acme.localhost/sales/orders', [
                 'customer_id' => $customerId,
                 'items' => [
-                    ['product_id' => $productId, 'quantity' => 3],
+                    ['product_id' => $productId, 'quantity' => 3, 'unit_price' => 15000],
                 ],
             ])
             ->assertRedirect();

@@ -22,7 +22,17 @@ Sales invoicing      → customer invoice (finance)
 PO billing           → vendor bill (finance)
 ```
 
-Daksa keeps a **simpler MVP** first (single warehouse, no lots/routes), then grows toward Aureus parity.
+## Form UX (vs Aureus reference)
+
+Daksa stays **Blade + Vite** (no Filament). Document forms mimic Aureus patterns:
+
+- Searchable selects (Tom Select)
+- Table-style order lines (product / qty / price / amount)
+- Auto-fill unit price on product pick
+- Live line amounts + document subtotal
+- Stock warning when qty exceeds on-hand (sales)
+- Product form: 2/3 + 1/3 layout (identity vs pricing)
+
 
 ## Current implementation status
 

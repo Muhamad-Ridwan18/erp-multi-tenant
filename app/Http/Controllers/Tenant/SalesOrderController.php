@@ -50,6 +50,7 @@ class SalesOrderController extends Controller
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', Rule::exists(Product::class, 'id')],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.unit_price' => ['required', 'integer', 'min:0'],
         ]);
 
         try {
@@ -58,14 +59,14 @@ class SalesOrderController extends Controller
                 $linePayload = [];
 
                 foreach ($data['items'] as $row) {
-                    $product = Product::query()->findOrFail($row['product_id']);
                     $qty = (int) $row['quantity'];
-                    $lineTotal = $product->price * $qty;
+                    $unitPrice = (int) $row['unit_price'];
+                    $lineTotal = $unitPrice * $qty;
                     $subtotal += $lineTotal;
                     $linePayload[] = [
-                        'product_id' => $product->id,
+                        'product_id' => $row['product_id'],
                         'quantity' => $qty,
-                        'unit_price' => $product->price,
+                        'unit_price' => $unitPrice,
                         'line_total' => $lineTotal,
                     ];
                 }

@@ -6,7 +6,10 @@
 
 @section('content')
     <div class="mb-6 flex flex-wrap items-start justify-between gap-3">
-        <h1 class="text-2xl font-semibold text-ink-950">{{ $product->name }}</h1>
+        <div>
+            <h1 class="text-2xl font-semibold text-ink-950">{{ $product->name }}</h1>
+            <p class="mt-1 text-sm text-ink-500">Stock on hand: <strong>{{ $product->stock_qty }} {{ $product->unit }}</strong></p>
+        </div>
         @can('inventory.products.delete')
             <form method="POST" action="{{ route('tenant.products.destroy', $product) }}" onsubmit="return confirm('Delete this product?')">
                 @csrf
@@ -16,28 +19,26 @@
         @endcan
     </div>
 
-    <div class="grid gap-6 lg:grid-cols-2">
-        <form method="POST" action="{{ route('tenant.products.update', $product) }}" class="space-y-6">
+    <div class="grid gap-6 lg:grid-cols-3">
+        <form method="POST" action="{{ route('tenant.products.update', $product) }}" class="space-y-6 lg:col-span-2">
             @csrf
             @method('PUT')
-            <x-card class="space-y-4">
-                <x-input label="SKU" name="sku" value="{{ old('sku', $product->sku) }}" required />
-                <x-input label="Name" name="name" value="{{ old('name', $product->name) }}" required />
-                <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-ink-800">Description</label>
-                    <textarea name="description" rows="2" class="w-full rounded-lg border border-line px-3 py-2 text-sm">{{ old('description', $product->description) }}</textarea>
-                </div>
-                <div class="grid gap-4 sm:grid-cols-2">
+            <div class="grid gap-6 sm:grid-cols-3">
+                <x-card class="space-y-4 sm:col-span-2">
+                    <x-input label="Name" name="name" value="{{ old('name', $product->name) }}" required class="text-lg font-medium" />
+                    <x-input label="SKU" name="sku" value="{{ old('sku', $product->sku) }}" required />
+                    <x-textarea label="Description" name="description" rows="4">{{ old('description', $product->description) }}</x-textarea>
+                </x-card>
+                <x-card class="space-y-4">
                     <x-input label="Unit" name="unit" value="{{ old('unit', $product->unit) }}" required />
-                    <x-input label="Price (Rp)" name="price" type="number" min="0" value="{{ old('price', $product->price) }}" required />
-                </div>
-                <label class="flex items-center gap-2 text-sm text-ink-700">
-                    <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $product->is_active))>
-                    Active
-                </label>
-                <p class="text-sm text-ink-500">Current stock: <strong>{{ $product->stock_qty }} {{ $product->unit }}</strong></p>
-            </x-card>
-            <x-button>Save product</x-button>
+                    <x-input label="Sales price (Rp)" name="price" type="number" min="0" value="{{ old('price', $product->price) }}" required />
+                    <label class="flex items-center gap-2 text-sm text-ink-700">
+                        <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $product->is_active)) class="rounded border-line">
+                        Active
+                    </label>
+                    <x-button>Save product</x-button>
+                </x-card>
+            </div>
         </form>
 
         @can('inventory.stock.adjust')

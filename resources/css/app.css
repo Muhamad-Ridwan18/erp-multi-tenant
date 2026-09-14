@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'tom-select/dist/css/tom-select.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -30,4 +31,33 @@
     body {
         @apply bg-surface font-sans text-ink-900 antialiased;
     }
+}
+
+/* Tom Select — match Daksa ink theme */
+.ts-wrapper.single .ts-control {
+    @apply min-h-10 rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink-900 shadow-none;
+}
+
+.ts-wrapper.focus .ts-control {
+    @apply border-ink-400 ring-2 ring-ink-400/40;
+}
+
+.ts-dropdown {
+    @apply rounded-lg border border-line bg-white shadow-lg;
+}
+
+.ts-dropdown .option {
+    @apply px-3 py-2 text-sm text-ink-800;
+}
+
+.ts-dropdown .active {
+    @apply bg-ink-50 text-ink-950;
+}
+
+.ts-control input {
+    @apply text-sm text-ink-900;
+}
+
+.ts-wrapper.single.input-active .ts-control {
+    @apply cursor-text;
 }
