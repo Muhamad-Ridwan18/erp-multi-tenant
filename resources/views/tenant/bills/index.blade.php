@@ -5,9 +5,7 @@
 @section('page-subtitle', 'Finance')
 
 @section('content')
-    <p class="mb-3 text-secondary">Create from received purchase orders, then post and pay.</p>
-
-    <x-table :headers="['Number', 'Vendor', 'Status', 'Total', 'Due', '']">
+    <x-table :headers="['Number', 'Vendor', 'Status', 'Total', 'Due', '']" title="Bills">
         @forelse ($bills as $bill)
             <tr>
                 <td class="font-monospace small">{{ $bill->number }}</td>
@@ -22,11 +20,11 @@
                 <td>{{ $bill->formattedGrandTotal() }}</td>
                 <td>{{ $bill->formattedAmountDue() }}</td>
                 <td class="text-end">
-                    <x-button href="{{ route('tenant.bills.show', $bill) }}" variant="ghost">View</x-button>
+                    <a href="{{ route('tenant.bills.show', $bill) }}" class="btn btn-ghost-primary btn-sm">View</a>
                 </td>
             </tr>
         @empty
-            <tr><td colspan="6" class="text-center text-secondary">No bills yet. Create one from a received purchase order.</td></tr>
+            <tr><td colspan="6" class="text-center text-secondary py-4">No bills yet. Create one from a received purchase order.</td></tr>
         @endforelse
     </x-table>
 @endsection

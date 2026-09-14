@@ -4,15 +4,17 @@
 @section('page-title', 'Users')
 @section('page-subtitle', 'Tenant workspace users')
 
-@section('content')
-    <div class="mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
-        <p class="mb-0 text-secondary">Manage access for this company.</p>
-        @can('settings.users.manage')
-            <x-button href="{{ route('tenant.users.create') }}">New user</x-button>
-        @endcan
-    </div>
+@section('page-actions')
+    @can('settings.users.manage')
+        <a href="{{ route('tenant.users.create') }}" class="btn btn-primary">
+            <i class="ti ti-plus me-1"></i>
+            New user
+        </a>
+    @endcan
+@endsection
 
-    <x-table :headers="['Name', 'Email', 'Roles', '']">
+@section('content')
+    <x-table :headers="['Name', 'Email', 'Roles', '']" title="Users">
         @forelse ($users as $row)
             <tr>
                 <td class="fw-medium">{{ $row->name }}</td>
@@ -20,12 +22,12 @@
                 <td class="text-secondary">{{ $row->roles->pluck('name')->join(', ') ?: '—' }}</td>
                 <td class="text-end">
                     @can('settings.users.manage')
-                        <x-button href="{{ route('tenant.users.edit', $row) }}" variant="ghost">Edit</x-button>
+                        <a href="{{ route('tenant.users.edit', $row) }}" class="btn btn-ghost-primary btn-sm">Edit</a>
                     @endcan
                 </td>
             </tr>
         @empty
-            <tr><td colspan="4" class="text-center text-secondary">No users yet.</td></tr>
+            <tr><td colspan="4" class="text-center text-secondary py-4">No users yet.</td></tr>
         @endforelse
     </x-table>
 @endsection

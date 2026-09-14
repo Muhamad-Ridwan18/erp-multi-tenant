@@ -4,15 +4,17 @@
 @section('page-title', 'Sales orders')
 @section('page-subtitle', 'Sales')
 
-@section('content')
-    <div class="mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
-        <p class="mb-0 text-secondary">Draft then confirm to deduct stock.</p>
-        @can('sales.orders.create')
-            <x-button href="{{ route('tenant.orders.create') }}">New order</x-button>
-        @endcan
-    </div>
+@section('page-actions')
+    @can('sales.orders.create')
+        <a href="{{ route('tenant.orders.create') }}" class="btn btn-primary">
+            <i class="ti ti-plus me-1"></i>
+            New order
+        </a>
+    @endcan
+@endsection
 
-    <x-table :headers="['Number', 'Customer', 'Status', 'Total', '']">
+@section('content')
+    <x-table :headers="['Number', 'Customer', 'Status', 'Total', '']" title="Sales orders">
         @forelse ($orders as $order)
             <tr>
                 <td class="font-monospace small">{{ $order->number }}</td>
@@ -22,11 +24,11 @@
                 </td>
                 <td>{{ $order->formattedGrandTotal() }}</td>
                 <td class="text-end">
-                    <x-button href="{{ route('tenant.orders.show', $order) }}" variant="ghost">View</x-button>
+                    <a href="{{ route('tenant.orders.show', $order) }}" class="btn btn-ghost-primary btn-sm">View</a>
                 </td>
             </tr>
         @empty
-            <tr><td colspan="5" class="text-center text-secondary">No orders yet.</td></tr>
+            <tr><td colspan="5" class="text-center text-secondary py-4">No orders yet.</td></tr>
         @endforelse
     </x-table>
 @endsection

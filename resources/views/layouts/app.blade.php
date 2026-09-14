@@ -1,10 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-navbar-position="vertical">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>@yield('title', 'Daksa ERP')</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
@@ -26,11 +30,14 @@
                             <h2 class="page-title">@yield('page-title', 'Workspace')</h2>
                         </div>
                         <div class="col-auto ms-auto d-print-none">
-                            <div class="d-flex align-items-center gap-3">
-                                <span class="d-none d-sm-inline text-secondary">{{ $user->name }}</span>
-                                <form method="POST" action="{{ route('logout') }}">
+                            <div class="btn-list">
+                                @yield('page-actions')
+                                <form method="POST" action="{{ route('logout') }}" class="d-inline">
                                     @csrf
-                                    <x-button type="submit" variant="ghost">Logout</x-button>
+                                    <button type="submit" class="btn btn-ghost-secondary">
+                                        <i class="ti ti-logout me-1"></i>
+                                        Logout
+                                    </button>
                                 </form>
                             </div>
                         </div>

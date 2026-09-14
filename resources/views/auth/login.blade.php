@@ -4,31 +4,64 @@
 
 @section('content')
     <div class="text-center mb-4">
-        <h1 class="h2 mb-1">Daksa</h1>
-        <p class="text-secondary">
+        <a href="{{ url('/') }}" class="navbar-brand navbar-brand-autodark d-inline-flex align-items-center gap-2">
+            <span class="avatar bg-primary text-white fw-bold">D</span>
+            <span class="navbar-brand-text">Daksa</span>
+        </a>
+        <div class="text-secondary mt-2">
             @if (! empty($isTenantHost) && $tenant)
                 {{ $tenant->name }} — tenant workspace
             @else
-                Platform console — manage tenants and plans
+                Platform console
             @endif
-        </p>
+        </div>
     </div>
 
     <div class="card card-md">
         <div class="card-body">
-            <h2 class="h3 text-center mb-3">Sign in</h2>
-            <form method="POST" action="{{ route('login') }}" autocomplete="off">
+            <h2 class="h2 text-center mb-4">Login to your account</h2>
+            <form method="POST" action="{{ route('login') }}" autocomplete="off" novalidate>
                 @csrf
-                <x-input label="Email" name="email" type="email" value="{{ old('email') }}" required autofocus autocomplete="username" />
-                <x-input label="Password" name="password" type="password" required autocomplete="current-password" />
                 <div class="mb-3">
+                    <label class="form-label" for="email">Email address</label>
+                    <input
+                        id="email"
+                        type="email"
+                        name="email"
+                        value="{{ old('email') }}"
+                        class="form-control @error('email') is-invalid @enderror"
+                        placeholder="your@email.com"
+                        required
+                        autofocus
+                        autocomplete="username"
+                    >
+                    @error('email')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="mb-2">
+                    <label class="form-label" for="password">Password</label>
+                    <input
+                        id="password"
+                        type="password"
+                        name="password"
+                        class="form-control @error('password') is-invalid @enderror"
+                        placeholder="Your password"
+                        required
+                        autocomplete="current-password"
+                    >
+                    @error('password')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="mb-2">
                     <label class="form-check">
                         <input type="checkbox" name="remember" value="1" class="form-check-input">
-                        <span class="form-check-label">Remember me</span>
+                        <span class="form-check-label">Remember me on this device</span>
                     </label>
                 </div>
                 <div class="form-footer">
-                    <x-button class="w-100">Login</x-button>
+                    <button type="submit" class="btn btn-primary w-100">Sign in</button>
                 </div>
             </form>
         </div>

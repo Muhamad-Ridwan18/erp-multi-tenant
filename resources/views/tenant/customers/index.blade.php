@@ -4,15 +4,17 @@
 @section('page-title', 'Customers')
 @section('page-subtitle', 'Partners')
 
-@section('content')
-    <div class="mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
-        <p class="mb-0 text-secondary">Companies and people you sell to.</p>
-        @can('sales.customers.create')
-            <x-button href="{{ route('tenant.customers.create') }}">New customer</x-button>
-        @endcan
-    </div>
+@section('page-actions')
+    @can('sales.customers.create')
+        <a href="{{ route('tenant.customers.create') }}" class="btn btn-primary">
+            <i class="ti ti-plus me-1"></i>
+            New customer
+        </a>
+    @endcan
+@endsection
 
-    <x-table :headers="['Name', 'Email', 'Phone', '']">
+@section('content')
+    <x-table :headers="['Name', 'Email', 'Phone', '']" title="Customers">
         @forelse ($customers as $customer)
             <tr>
                 <td class="fw-medium">{{ $customer->name }}</td>
@@ -20,12 +22,12 @@
                 <td class="text-secondary">{{ $customer->phone ?: '—' }}</td>
                 <td class="text-end">
                     @can('sales.customers.update')
-                        <x-button href="{{ route('tenant.customers.edit', $customer) }}" variant="ghost">Edit</x-button>
+                        <a href="{{ route('tenant.customers.edit', $customer) }}" class="btn btn-ghost-primary btn-sm">Edit</a>
                     @endcan
                 </td>
             </tr>
         @empty
-            <tr><td colspan="4" class="text-center text-secondary">No customers yet.</td></tr>
+            <tr><td colspan="4" class="text-center text-secondary py-4">No customers yet.</td></tr>
         @endforelse
     </x-table>
 @endsection

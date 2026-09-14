@@ -4,15 +4,17 @@
 @section('page-title', 'Roles')
 @section('page-subtitle', 'Custom roles for this tenant')
 
-@section('content')
-    <div class="mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
-        <p class="mb-0 text-secondary">Permissions are limited by the modules in your plan.</p>
-        @can('settings.roles.manage')
-            <x-button href="{{ route('tenant.roles.create') }}">New role</x-button>
-        @endcan
-    </div>
+@section('page-actions')
+    @can('settings.roles.manage')
+        <a href="{{ route('tenant.roles.create') }}" class="btn btn-primary">
+            <i class="ti ti-plus me-1"></i>
+            New role
+        </a>
+    @endcan
+@endsection
 
-    <x-table :headers="['Name', 'Permissions', 'Users', '']">
+@section('content')
+    <x-table :headers="['Name', 'Permissions', 'Users', '']" title="Roles">
         @forelse ($roles as $role)
             <tr>
                 <td class="fw-medium">
@@ -25,13 +27,13 @@
                 <td class="text-secondary">{{ $role->users_count }}</td>
                 <td class="text-end">
                     @can('settings.roles.manage')
-                        <x-button href="{{ route('tenant.roles.edit', $role) }}" variant="ghost">Edit</x-button>
+                        <a href="{{ route('tenant.roles.edit', $role) }}" class="btn btn-ghost-primary btn-sm">Edit</a>
                     @endcan
                 </td>
             </tr>
         @empty
             <tr>
-                <td colspan="4" class="text-center text-secondary">No roles yet.</td>
+                <td colspan="4" class="text-center text-secondary py-4">No roles yet.</td>
             </tr>
         @endforelse
     </x-table>

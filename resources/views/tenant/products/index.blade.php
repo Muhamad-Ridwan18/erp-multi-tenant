@@ -4,15 +4,17 @@
 @section('page-title', 'Products')
 @section('page-subtitle', 'Inventory')
 
-@section('content')
-    <div class="mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
-        <p class="mb-0 text-secondary">Catalog and stock on hand.</p>
-        @can('inventory.products.create')
-            <x-button href="{{ route('tenant.products.create') }}">New product</x-button>
-        @endcan
-    </div>
+@section('page-actions')
+    @can('inventory.products.create')
+        <a href="{{ route('tenant.products.create') }}" class="btn btn-primary">
+            <i class="ti ti-plus me-1"></i>
+            New product
+        </a>
+    @endcan
+@endsection
 
-    <x-table :headers="['SKU', 'Name', 'Price', 'Stock', 'Status', '']">
+@section('content')
+    <x-table :headers="['SKU', 'Name', 'Price', 'Stock', 'Status', '']" title="Products">
         @forelse ($products as $product)
             <tr>
                 <td class="font-monospace small">{{ $product->sku }}</td>
@@ -24,12 +26,12 @@
                 </td>
                 <td class="text-end">
                     @can('inventory.products.update')
-                        <x-button href="{{ route('tenant.products.edit', $product) }}" variant="ghost">Edit</x-button>
+                        <a href="{{ route('tenant.products.edit', $product) }}" class="btn btn-ghost-primary btn-sm">Edit</a>
                     @endcan
                 </td>
             </tr>
         @empty
-            <tr><td colspan="6" class="text-center text-secondary">No products yet.</td></tr>
+            <tr><td colspan="6" class="text-center text-secondary py-4">No products yet.</td></tr>
         @endforelse
     </x-table>
 @endsection
