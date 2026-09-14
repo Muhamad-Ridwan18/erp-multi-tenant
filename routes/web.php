@@ -28,9 +28,16 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
         Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('roles.edit');
         Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
+        Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
     });
 
     Route::prefix('platform')->name('platform.')->group(function () {
         Route::get('/tenants', [TenantController::class, 'index'])->name('tenants.index');
+        Route::get('/tenants/create', [TenantController::class, 'create'])->name('tenants.create');
+        Route::post('/tenants', [TenantController::class, 'store'])->name('tenants.store');
+        Route::get('/tenants/{tenant}', [TenantController::class, 'show'])->name('tenants.show');
+        Route::get('/tenants/{tenant}/edit', [TenantController::class, 'edit'])->name('tenants.edit');
+        Route::put('/tenants/{tenant}', [TenantController::class, 'update'])->name('tenants.update');
+        Route::patch('/tenants/{tenant}/suspend', [TenantController::class, 'suspend'])->name('tenants.suspend');
     });
 });

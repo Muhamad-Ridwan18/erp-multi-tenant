@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class RoleController extends Controller
@@ -32,7 +34,14 @@ class RoleController extends Controller
         abort_unless($request->user()->can('settings.roles.manage'), 403);
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('roles', 'name')->where(
+                    fn ($query) => $query->where('tenant_id', $request->user()->tenant_id)
+                ),
+            ],
         ]);
 
         $role = Role::query()->create([
@@ -62,12 +71,19 @@ class RoleController extends Controller
             ->get()
             ->groupBy('module_code');
 
-        $role->load('permissions');
+        $role->load('permissions', 'users');
+
+        $tenantUsers = User::query()
+            ->where('tenant_id', $request->user()->tenant_id)
+            ->orderBy('name')
+            ->get();
 
         return view('tenant.roles.edit', [
             'role' => $role,
             'permissionsByModule' => $permissions,
             'selected' => $role->permissions->pluck('id')->all(),
+            'tenantUsers' => $tenantUsers,
+            'selectedUsers' => $role->users->pluck('id')->all(),
         ]);
     }
 
@@ -77,9 +93,23 @@ class RoleController extends Controller
         abort_unless($role->tenant_id === $request->user()->tenant_id, 404);
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('roles', 'name')
+                    ->where(fn ($query) => $query->where('tenant_id', $request->user()->tenant_id))
+                    ->ignore($role->id),
+            ],
             'permissions' => ['array'],
             'permissions.*' => ['integer', 'exists:permissions,id'],
+            'users' => ['array'],
+            'users.*' => [
+                'integer',
+                Rule::exists('users', 'id')->where(
+                    fn ($query) => $query->where('tenant_id', $request->user()->tenant_id)
+                ),
+            ],
         ]);
 
         if (! $role->is_system) {
@@ -88,7 +118,23 @@ class RoleController extends Controller
 
         $allowedModules = $request->user()->tenant->enabledModuleCodes();
         $role->syncPermissionsWithinPlan($data['permissions'] ?? [], $allowedModules);
+        $role->users()->sync($data['users'] ?? []);
 
-        return back()->with('status', 'Role permissions updated.');
+        return back()->with('status', 'Role updated.');
+    }
+
+    public function destroy(Request $request, Role $role): RedirectResponse
+    {
+        abort_unless($request->user()->can('settings.roles.manage'), 403);
+        abort_unless($role->tenant_id === $request->user()->tenant_id, 404);
+        abort_if($role->is_system, 403, 'System roles cannot be deleted.');
+
+        $role->users()->detach();
+        $role->permissions()->detach();
+        $role->delete();
+
+        return redirect()
+            ->route('tenant.roles.index')
+            ->with('status', 'Role deleted.');
     }
 }

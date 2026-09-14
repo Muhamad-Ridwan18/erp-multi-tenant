@@ -4,54 +4,92 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Daksa ERP')</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-slate-100 text-slate-900 min-h-screen">
+<body class="min-h-screen">
     @auth
-        <header class="bg-white border-b border-slate-200">
-            <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-                <div class="flex items-center gap-4">
-                    <a href="{{ auth()->user()->isPlatformAdmin() ? route('platform.tenants.index') : route('dashboard') }}" class="font-semibold tracking-tight">Daksa ERP</a>
-                    @unless(auth()->user()->isPlatformAdmin())
-                        <nav class="flex gap-3 text-sm">
-                            <a href="{{ route('dashboard') }}" class="text-slate-600 hover:text-slate-900">Dashboard</a>
-                            @can('settings.roles.view')
-                                <a href="{{ route('tenant.roles.index') }}" class="text-slate-600 hover:text-slate-900">Roles</a>
-                            @endcan
-                        </nav>
+        @php
+            $user = auth()->user();
+            $isPlatform = $user->isPlatformAdmin();
+        @endphp
+
+        <div class="min-h-screen lg:grid lg:grid-cols-[16rem_1fr]">
+            <aside class="border-b border-line bg-ink-950 text-ink-50 lg:border-b-0 lg:border-r lg:min-h-screen">
+                <div class="px-5 py-5">
+                    <a href="{{ $isPlatform ? route('platform.tenants.index') : route('dashboard') }}" class="block">
+                        <div class="text-lg font-semibold tracking-tight text-white">Daksa</div>
+                        <div class="text-xs text-ink-300">ERP multi-tenant</div>
+                    </a>
+                </div>
+
+                <nav class="space-y-1 px-3 pb-6 text-sm">
+                    @if ($isPlatform)
+                        <a href="{{ route('platform.tenants.index') }}"
+                           class="block rounded-lg px-3 py-2 {{ request()->routeIs('platform.tenants.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
+                            Tenants
+                        </a>
                     @else
-                        <nav class="flex gap-3 text-sm">
-                            <a href="{{ route('platform.tenants.index') }}" class="text-slate-600 hover:text-slate-900">Tenants</a>
-                        </nav>
-                    @endunless
-                </div>
-                <div class="flex items-center gap-3 text-sm">
-                    <span class="text-slate-500">{{ auth()->user()->name }}</span>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button class="text-slate-700 underline">Logout</button>
-                    </form>
-                </div>
+                        <a href="{{ route('dashboard') }}"
+                           class="block rounded-lg px-3 py-2 {{ request()->routeIs('dashboard') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
+                            Dashboard
+                        </a>
+                        @can('settings.roles.view')
+                            <a href="{{ route('tenant.roles.index') }}"
+                               class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.roles.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
+                                Roles
+                            </a>
+                        @endcan
+                    @endif
+                </nav>
+
+                @unless ($isPlatform)
+                    <div class="mt-auto hidden border-t border-ink-800 px-5 py-4 text-xs text-ink-300 lg:block">
+                        <div class="font-medium text-ink-100">{{ $user->tenant?->name }}</div>
+                        <div>{{ $user->tenant?->status }}</div>
+                    </div>
+                @endunless
+            </aside>
+
+            <div class="min-w-0">
+                <header class="flex items-center justify-between gap-4 border-b border-line bg-panel px-4 py-3 sm:px-6">
+                    <div>
+                        <div class="text-sm font-medium text-ink-900">@yield('page-title', 'Workspace')</div>
+                        @hasSection('page-subtitle')
+                            <div class="text-xs text-ink-500">@yield('page-subtitle')</div>
+                        @endif
+                    </div>
+                    <div class="flex items-center gap-3 text-sm">
+                        <span class="hidden text-ink-600 sm:inline">{{ $user->name }}</span>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <x-button type="submit" variant="ghost">Logout</x-button>
+                        </form>
+                    </div>
+                </header>
+
+                <main class="px-4 py-6 sm:px-6">
+                    @if (session('status'))
+                        <x-alert class="mb-4">{{ session('status') }}</x-alert>
+                    @endif
+
+                    @if ($errors->any())
+                        <x-alert type="error" class="mb-4">
+                            <ul class="list-disc pl-4">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </x-alert>
+                    @endif
+
+                    @yield('content')
+                </main>
             </div>
-        </header>
+        </div>
+    @else
+        <main class="min-h-screen">
+            @yield('content')
+        </main>
     @endauth
-
-    <main class="max-w-5xl mx-auto px-4 py-8">
-        @if (session('status'))
-            <div class="mb-4 rounded-lg bg-emerald-50 text-emerald-800 px-4 py-3 text-sm">{{ session('status') }}</div>
-        @endif
-
-        @if ($errors->any())
-            <div class="mb-4 rounded-lg bg-red-50 text-red-800 px-4 py-3 text-sm">
-                <ul class="list-disc pl-4">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        @yield('content')
-    </main>
 </body>
 </html>
