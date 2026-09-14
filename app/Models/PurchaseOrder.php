@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class PurchaseOrder extends Model
@@ -49,6 +50,11 @@ class PurchaseOrder extends Model
     public function stockMovements(): MorphMany
     {
         return $this->morphMany(StockMovement::class, 'reference');
+    }
+
+    public function bill(): HasOne
+    {
+        return $this->hasOne(Bill::class);
     }
 
     public function isDraft(): bool

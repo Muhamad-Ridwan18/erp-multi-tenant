@@ -30,7 +30,7 @@ Daksa keeps a **simpler MVP** first (single warehouse, no lots/routes), then gro
 |--------|--------|-------|
 | Procurement | Partial | Vendors + PO draft→confirm→receive (stock in) |
 | Inventory | Partial | Products + stock adjust + sale/purchase movements |
-| Finance | Not started | Permission catalog ready |
+| Finance | Partial | Invoices from SO, bills from PO, payments |
 | Sales | Partial | Customers, orders draft→confirm |
 | Settings | Done | Users, roles, permissions |
 
@@ -134,7 +134,7 @@ php artisan serve --host=127.0.0.1 --port=8001
 ## Suggested build order
 
 1. ~~**Procurement** — vendors + PO draft→confirm→receipt (stock in)~~ ✅
-2. **Finance** — invoice from confirmed SO; bill from confirmed PO
+2. ~~**Finance** — invoice from confirmed SO; bill from confirmed PO~~ ✅
 3. Perdalam **Inventory** — warehouses, transfer, richer stock moves
 4. Perdalam **Sales** — quotation, delivery
 

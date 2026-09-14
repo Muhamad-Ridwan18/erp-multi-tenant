@@ -58,6 +58,18 @@
                                 Sales orders
                             </a>
                         @endcan
+                        @can('finance.invoices.view')
+                            <a href="{{ route('tenant.invoices.index') }}"
+                               class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.invoices.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
+                                Invoices
+                            </a>
+                        @endcan
+                        @can('finance.bills.view')
+                            <a href="{{ route('tenant.bills.index') }}"
+                               class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.bills.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
+                                Bills
+                            </a>
+                        @endcan
                         @can('settings.users.view')
                             <a href="{{ route('tenant.users.index') }}"
                                class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.users.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">

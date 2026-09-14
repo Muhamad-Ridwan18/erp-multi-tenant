@@ -98,7 +98,7 @@ class SalesOrderController extends Controller
     {
         abort_unless($request->user()->can('sales.orders.view'), 403);
 
-        $order->load(['customer', 'items.product', 'creator']);
+        $order->load(['customer', 'items.product', 'creator', 'invoice']);
 
         return view('tenant.orders.show', compact('order'));
     }

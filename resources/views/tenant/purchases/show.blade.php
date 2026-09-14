@@ -44,6 +44,18 @@
                     </form>
                 @endcan
             @endif
+            @if ($order->isReceived())
+                @can('finance.bills.create')
+                    @if ($order->bill)
+                        <x-button href="{{ route('tenant.bills.show', $order->bill) }}" variant="secondary">View bill</x-button>
+                    @else
+                        <form method="POST" action="{{ route('tenant.bills.from-purchase', $order) }}">
+                            @csrf
+                            <x-button type="submit">Create bill</x-button>
+                        </form>
+                    @endif
+                @endcan
+            @endif
             <x-button href="{{ route('tenant.purchases.index') }}" variant="ghost">Back</x-button>
         </div>
     </div>

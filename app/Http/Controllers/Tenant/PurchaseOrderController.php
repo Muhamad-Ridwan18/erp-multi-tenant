@@ -98,7 +98,7 @@ class PurchaseOrderController extends Controller
     {
         abort_unless($request->user()->can('procurement.orders.view'), 403);
 
-        $purchase->load(['vendor', 'items.product', 'creator']);
+        $purchase->load(['vendor', 'items.product', 'creator', 'bill']);
 
         return view('tenant.purchases.show', ['order' => $purchase]);
     }

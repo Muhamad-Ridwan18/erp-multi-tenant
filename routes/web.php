@@ -3,7 +3,9 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Platform\TenantController;
+use App\Http\Controllers\Tenant\BillController;
 use App\Http\Controllers\Tenant\CustomerController;
+use App\Http\Controllers\Tenant\InvoiceController;
 use App\Http\Controllers\Tenant\ProductController;
 use App\Http\Controllers\Tenant\PurchaseOrderController;
 use App\Http\Controllers\Tenant\RoleController;
@@ -88,6 +90,22 @@ Route::middleware(['auth', 'tenant.domain'])->group(function () {
         Route::get('/orders/{order}', [SalesOrderController::class, 'show'])->name('orders.show');
         Route::post('/orders/{order}/confirm', [SalesOrderController::class, 'confirm'])->name('orders.confirm');
         Route::delete('/orders/{order}', [SalesOrderController::class, 'destroy'])->name('orders.destroy');
+    });
+
+    Route::prefix('finance')->name('tenant.')->group(function () {
+        Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+        Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+        Route::post('/invoices/from-order/{order}', [InvoiceController::class, 'storeFromOrder'])->name('invoices.from-order');
+        Route::post('/invoices/{invoice}/post', [InvoiceController::class, 'post'])->name('invoices.post');
+        Route::post('/invoices/{invoice}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
+        Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
+
+        Route::get('/bills', [BillController::class, 'index'])->name('bills.index');
+        Route::get('/bills/{bill}', [BillController::class, 'show'])->name('bills.show');
+        Route::post('/bills/from-purchase/{purchase}', [BillController::class, 'storeFromPurchase'])->name('bills.from-purchase');
+        Route::post('/bills/{bill}/post', [BillController::class, 'post'])->name('bills.post');
+        Route::post('/bills/{bill}/pay', [BillController::class, 'pay'])->name('bills.pay');
+        Route::delete('/bills/{bill}', [BillController::class, 'destroy'])->name('bills.destroy');
     });
 
     Route::prefix('settings')->name('tenant.')->group(function () {

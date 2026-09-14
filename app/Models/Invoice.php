@@ -5,20 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-class SalesOrder extends Model
+class Invoice extends Model
 {
     protected $connection = 'tenant';
 
     protected $fillable = [
         'number',
         'customer_id',
+        'sales_order_id',
         'status',
         'subtotal',
+        'amount_paid',
         'notes',
-        'confirmed_at',
+        'posted_at',
         'created_by',
     ];
 
@@ -26,7 +26,8 @@ class SalesOrder extends Model
     {
         return [
             'subtotal' => 'integer',
-            'confirmed_at' => 'datetime',
+            'amount_paid' => 'integer',
+            'posted_at' => 'datetime',
         ];
     }
 
@@ -35,9 +36,19 @@ class SalesOrder extends Model
         return $this->belongsTo(Customer::class);
     }
 
+    public function salesOrder(): BelongsTo
+    {
+        return $this->belongsTo(SalesOrder::class);
+    }
+
     public function items(): HasMany
     {
-        return $this->hasMany(SalesOrderItem::class);
+        return $this->hasMany(InvoiceItem::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 
     public function creator(): BelongsTo
@@ -45,28 +56,33 @@ class SalesOrder extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function stockMovements(): MorphMany
-    {
-        return $this->morphMany(StockMovement::class, 'reference');
-    }
-
-    public function invoice(): HasOne
-    {
-        return $this->hasOne(Invoice::class);
-    }
-
     public function isDraft(): bool
     {
         return $this->status === 'draft';
     }
 
-    public function isConfirmed(): bool
+    public function isPosted(): bool
     {
-        return $this->status === 'confirmed';
+        return $this->status === 'posted';
+    }
+
+    public function amountDue(): int
+    {
+        return max(0, $this->subtotal - $this->amount_paid);
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->isPosted() && $this->amountDue() === 0;
     }
 
     public function formattedSubtotal(): string
     {
         return 'Rp '.number_format($this->subtotal, 0, ',', '.');
+    }
+
+    public function formattedAmountDue(): string
+    {
+        return 'Rp '.number_format($this->amountDue(), 0, ',', '.');
     }
 }

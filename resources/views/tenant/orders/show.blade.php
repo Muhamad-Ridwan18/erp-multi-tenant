@@ -29,6 +29,18 @@
                     </form>
                 @endcan
             @endif
+            @if ($order->isConfirmed())
+                @can('finance.invoices.create')
+                    @if ($order->invoice)
+                        <x-button href="{{ route('tenant.invoices.show', $order->invoice) }}" variant="secondary">View invoice</x-button>
+                    @else
+                        <form method="POST" action="{{ route('tenant.invoices.from-order', $order) }}">
+                            @csrf
+                            <x-button type="submit">Create invoice</x-button>
+                        </form>
+                    @endif
+                @endcan
+            @endif
             <x-button href="{{ route('tenant.orders.index') }}" variant="ghost">Back</x-button>
         </div>
     </div>
