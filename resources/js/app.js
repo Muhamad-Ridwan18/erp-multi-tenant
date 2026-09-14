@@ -1,4 +1,4 @@
-import '@tabler/core/dist/js/tabler.min.js';
+import { Modal } from '@tabler/core/dist/js/tabler.esm.js';
 import TomSelect from 'tom-select';
 
 const applyTheme = (theme) => {
@@ -8,6 +8,15 @@ const applyTheme = (theme) => {
 
     localStorage.setItem('tabler-theme', theme === 'auto' ? 'auto' : resolved);
     document.documentElement.setAttribute('data-bs-theme', resolved === 'dark' ? 'dark' : 'light');
+};
+
+const getQuickCreateModal = () => {
+    const el = document.getElementById('quick-create-dialog');
+    if (! el) {
+        return null;
+    }
+
+    return Modal.getOrCreateInstance(el);
 };
 
 const formatRp = (value) => {
@@ -149,7 +158,8 @@ const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.conte
 
 const openQuickCreate = (button) => {
     const dialog = document.getElementById('quick-create-dialog');
-    if (! dialog) {
+    const modal = getQuickCreateModal();
+    if (! dialog || ! modal) {
         return;
     }
 
@@ -157,23 +167,23 @@ const openQuickCreate = (button) => {
     dialog.querySelector('[data-quick-create-title]').textContent = `Create ${type}`;
     dialog.querySelector('[data-quick-create-url]').value = button.dataset.quickUrl || '';
     dialog.querySelector('[data-quick-create-select]').value = button.dataset.quickSelect || '';
-    dialog.querySelector('[data-quick-create-error]')?.classList.add('hidden');
+    dialog.querySelector('[data-quick-create-error]')?.classList.add('d-none');
     dialog.querySelector('[data-quick-create-form]')?.reset();
-    dialog.showModal();
-    dialog.querySelector('[data-quick-name]')?.focus();
+    modal.show();
+    setTimeout(() => dialog.querySelector('[data-quick-name]')?.focus(), 150);
 };
 
 const submitQuickCreate = async (form) => {
     const url = form.querySelector('[data-quick-create-url]')?.value;
     const selectId = form.querySelector('[data-quick-create-select]')?.value;
     const errorEl = form.querySelector('[data-quick-create-error]');
-    const dialog = document.getElementById('quick-create-dialog');
+    const modal = getQuickCreateModal();
 
     if (! url) {
         return;
     }
 
-    errorEl?.classList.add('hidden');
+    errorEl?.classList.add('d-none');
 
     const body = new FormData(form);
     body.delete('_token');
@@ -195,7 +205,7 @@ const submitQuickCreate = async (form) => {
             || 'Could not create record.';
         if (errorEl) {
             errorEl.textContent = message;
-            errorEl.classList.remove('hidden');
+            errorEl.classList.remove('d-none');
         }
         return;
     }
@@ -213,7 +223,7 @@ const submitQuickCreate = async (form) => {
         }
     }
 
-    dialog?.close();
+    modal?.hide();
 };
 
 document.addEventListener('click', (event) => {
@@ -243,7 +253,7 @@ document.addEventListener('click', (event) => {
     }
 
     if (event.target.closest('[data-quick-create-cancel]')) {
-        document.getElementById('quick-create-dialog')?.close();
+        getQuickCreateModal()?.hide();
     }
 
     if (event.target.closest('[data-add-line]')) {

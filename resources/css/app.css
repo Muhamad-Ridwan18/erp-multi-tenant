@@ -57,11 +57,16 @@ body {
 .navbar-vertical[data-bs-theme='dark'] .nav-link,
 .navbar-vertical[data-bs-theme='dark'] .nav-link-title,
 .navbar-vertical[data-bs-theme='dark'] .navbar-brand-text {
-    color: inherit;
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.navbar-vertical[data-bs-theme='dark'] .nav-link-icon,
+.navbar-vertical[data-bs-theme='dark'] .nav-link-icon .ti {
+    color: rgba(255, 255, 255, 0.65) !important;
 }
 
 .navbar-vertical[data-bs-theme='dark'] .nav-section-title {
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.45) !important;
 }
 
 .navbar-vertical[data-bs-theme='dark'] .text-secondary {
@@ -69,8 +74,9 @@ body {
 }
 
 .navbar-vertical[data-bs-theme='dark'] .nav-link.active,
-.navbar-vertical[data-bs-theme='dark'] .nav-item.active > .nav-link {
-    color: #fff;
+.navbar-vertical[data-bs-theme='dark'] .nav-item.active > .nav-link,
+.navbar-vertical[data-bs-theme='dark'] .nav-link.active .nav-link-title {
+    color: #fff !important;
     background: rgba(255, 255, 255, 0.08);
 }
 
