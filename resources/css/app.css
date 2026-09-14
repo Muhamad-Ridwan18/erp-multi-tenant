@@ -7,6 +7,22 @@
     --tblr-font-sans-serif: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
+/*
+ * Vite/LightningCSS rewrites light-dark() using --lightningcss-* vars.
+ * Force them when html theme is dark so the whole app actually switches.
+ */
+html[data-bs-theme='dark'] {
+    color-scheme: dark;
+    --lightningcss-light: ;
+    --lightningcss-dark: initial;
+}
+
+html[data-bs-theme='light'] {
+    color-scheme: light;
+    --lightningcss-light: initial;
+    --lightningcss-dark: ;
+}
+
 body {
     min-height: 100vh;
 }
@@ -71,7 +87,8 @@ body {
     padding: 0.4375rem 0.75rem;
     font-size: 0.875rem;
     box-shadow: none;
-    background-color: var(--tblr-bg-forms, #fff);
+    background-color: var(--tblr-bg-forms);
+    color: var(--tblr-body-color);
 }
 
 .ts-wrapper.focus .ts-control {

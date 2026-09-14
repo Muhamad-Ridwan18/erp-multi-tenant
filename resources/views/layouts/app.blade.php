@@ -6,6 +6,17 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>@yield('title', 'Daksa ERP')</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- Apply theme before paint to avoid light flash (Tabler pattern). --}}
+    <script>
+        (function () {
+            var stored = localStorage.getItem('tabler-theme');
+            var theme = stored || 'dark';
+            if (theme === 'auto') {
+                theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            document.documentElement.setAttribute('data-bs-theme', theme === 'dark' ? 'dark' : 'light');
+        })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -32,6 +43,14 @@
                         <div class="col-auto ms-auto d-print-none">
                             <div class="btn-list">
                                 @yield('page-actions')
+
+                                <a href="?theme=dark" class="btn btn-ghost-secondary btn-icon hide-theme-dark" data-theme-toggle="dark" title="Enable dark mode" aria-label="Enable dark mode">
+                                    <i class="ti ti-moon"></i>
+                                </a>
+                                <a href="?theme=light" class="btn btn-ghost-secondary btn-icon hide-theme-light" data-theme-toggle="light" title="Enable light mode" aria-label="Enable light mode">
+                                    <i class="ti ti-sun"></i>
+                                </a>
+
                                 <form method="POST" action="{{ route('logout') }}" class="d-inline">
                                     @csrf
                                     <button type="submit" class="btn btn-ghost-secondary">
@@ -73,6 +92,14 @@
 @else
     <div class="page page-center">
         <div class="container container-tight py-4">
+            <div class="text-end mb-3">
+                <a href="?theme=dark" class="btn btn-ghost-secondary btn-icon hide-theme-dark" data-theme-toggle="dark" title="Enable dark mode" aria-label="Enable dark mode">
+                    <i class="ti ti-moon"></i>
+                </a>
+                <a href="?theme=light" class="btn btn-ghost-secondary btn-icon hide-theme-light" data-theme-toggle="light" title="Enable light mode" aria-label="Enable light mode">
+                    <i class="ti ti-sun"></i>
+                </a>
+            </div>
             @yield('content')
         </div>
     </div>

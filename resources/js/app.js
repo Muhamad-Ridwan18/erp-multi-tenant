@@ -1,6 +1,15 @@
 import '@tabler/core/dist/js/tabler.min.js';
 import TomSelect from 'tom-select';
 
+const applyTheme = (theme) => {
+    const resolved = theme === 'auto'
+        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : theme;
+
+    localStorage.setItem('tabler-theme', theme === 'auto' ? 'auto' : resolved);
+    document.documentElement.setAttribute('data-bs-theme', resolved === 'dark' ? 'dark' : 'light');
+};
+
 const formatRp = (value) => {
     const amount = Number.isFinite(value) ? value : 0;
 
@@ -307,7 +316,25 @@ document.addEventListener('submit', (event) => {
     submitQuickCreate(form);
 });
 
+document.addEventListener('click', (event) => {
+    const toggle = event.target.closest('[data-theme-toggle]');
+    if (! toggle) {
+        return;
+    }
+
+    event.preventDefault();
+    applyTheme(toggle.getAttribute('data-theme-toggle'));
+});
+
 document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('theme')) {
+        applyTheme(params.get('theme'));
+        params.delete('theme');
+        const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`;
+        window.history.replaceState({}, '', next);
+    }
+
     initAllTomSelects();
     updateDocumentTotals(document);
 
