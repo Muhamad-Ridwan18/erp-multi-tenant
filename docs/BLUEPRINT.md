@@ -133,10 +133,10 @@ php artisan serve --host=127.0.0.1 --port=8001
 
 ## Suggested build order
 
-1. **Sales** — move customers under Sales; quotations (optional)
-2. **Procurement** — vendors + PO draft→confirm→receipt (stock in)
-3. **Finance** — invoice from confirmed SO; bill from confirmed PO
-4. **Inventory** — warehouses, transfer, richer stock moves
+1. ~~**Procurement** — vendors + PO draft→confirm→receipt (stock in)~~ ✅
+2. **Finance** — invoice from confirmed SO; bill from confirmed PO
+3. Perdalam **Inventory** — warehouses, transfer, richer stock moves
+4. Perdalam **Sales** — quotation, delivery
 
 ## Later
 
