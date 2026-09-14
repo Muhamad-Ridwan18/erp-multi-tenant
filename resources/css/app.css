@@ -1,63 +1,41 @@
-@import 'tailwindcss';
-@import 'tom-select/dist/css/tom-select.css';
+@import '@tabler/core/dist/css/tabler.min.css';
+@import 'tom-select/dist/css/tom-select.bootstrap5.css';
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
-
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
-
-    --color-ink-50: #f2f7f7;
-    --color-ink-100: #ddeaea;
-    --color-ink-200: #b9d4d4;
-    --color-ink-300: #87b3b4;
-    --color-ink-400: #568e90;
-    --color-ink-500: #3b7375;
-    --color-ink-600: #2f5c5e;
-    --color-ink-700: #284b4d;
-    --color-ink-800: #233e40;
-    --color-ink-900: #1f3536;
-    --color-ink-950: #0f1f20;
-
-    --color-surface: #f4f7f7;
-    --color-panel: #ffffff;
-    --color-line: #d7e2e2;
+:root {
+    --tblr-primary: #206bc4;
+    --daksa-brand: #206bc4;
 }
 
-@layer base {
-    body {
-        @apply bg-surface font-sans text-ink-900 antialiased;
-    }
+body {
+    min-height: 100vh;
 }
 
-/* Tom Select — match Daksa ink theme */
+/* Tom Select on Tabler forms */
 .ts-wrapper.single .ts-control {
-    @apply min-h-10 rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink-900 shadow-none;
+    min-height: 2.25rem;
+    border-radius: var(--tblr-border-radius);
+    border-color: var(--tblr-border-color);
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    box-shadow: none;
 }
 
 .ts-wrapper.focus .ts-control {
-    @apply border-ink-400 ring-2 ring-ink-400/40;
+    border-color: rgba(32, 107, 196, 0.5);
+    box-shadow: 0 0 0 0.25rem rgba(32, 107, 196, 0.25);
 }
 
 .ts-dropdown {
-    @apply rounded-lg border border-line bg-white shadow-lg;
+    border-radius: var(--tblr-border-radius);
+    border-color: var(--tblr-border-color);
 }
 
-.ts-dropdown .option {
-    @apply px-3 py-2 text-sm text-ink-800;
+.navbar-vertical .navbar-brand-text {
+    font-weight: 600;
+    letter-spacing: -0.02em;
 }
 
-.ts-dropdown .active {
-    @apply bg-ink-50 text-ink-950;
-}
-
-.ts-control input {
-    @apply text-sm text-ink-900;
-}
-
-.ts-wrapper.single.input-active .ts-control {
-    @apply cursor-text;
+.document-lines-table input.form-control,
+.document-lines-table select.form-select {
+    min-width: 4.5rem;
 }

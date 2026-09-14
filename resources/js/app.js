@@ -1,3 +1,4 @@
+import '@tabler/core/dist/js/tabler.min.js';
 import TomSelect from 'tom-select';
 
 const formatRp = (value) => {
@@ -35,10 +36,11 @@ const updateLine = (line) => {
 
         if (! Number.isNaN(stock) && calc.qty > stock) {
             hint.textContent = `Stock on hand: ${stock}. Qty exceeds stock.`;
+            hint.classList.remove('d-none');
             hint.classList.remove('hidden');
         } else {
             hint.textContent = '';
-            hint.classList.add('hidden');
+            hint.classList.add('d-none');
         }
     }
 };
@@ -125,14 +127,11 @@ const activateTab = (root, key) => {
     root.querySelectorAll('[data-tab-trigger]').forEach((btn) => {
         const active = btn.getAttribute('data-tab-trigger') === key;
         btn.setAttribute('aria-selected', active ? 'true' : 'false');
-        btn.classList.toggle('border-ink-800', active);
-        btn.classList.toggle('text-ink-950', active);
-        btn.classList.toggle('border-transparent', ! active);
-        btn.classList.toggle('text-ink-500', ! active);
+        btn.classList.toggle('active', active);
     });
 
     root.querySelectorAll('[data-tab-panel]').forEach((panel) => {
-        panel.classList.toggle('hidden', panel.getAttribute('data-tab-panel') !== key);
+        panel.classList.toggle('d-none', panel.getAttribute('data-tab-panel') !== key);
     });
 };
 

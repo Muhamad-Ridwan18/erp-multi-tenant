@@ -2,6 +2,12 @@
     'padding' => true,
 ])
 
-<div {{ $attributes->merge(['class' => 'rounded-xl border border-line bg-panel shadow-sm'.($padding ? ' p-6' : '')]) }}>
-    {{ $slot }}
+<div {{ $attributes->merge(['class' => 'card']) }}>
+    @if ($padding)
+        <div class="card-body">
+            {{ $slot }}
+        </div>
+    @else
+        {{ $slot }}
+    @endif
 </div>

@@ -5,31 +5,28 @@
 @section('page-subtitle', 'Finance')
 
 @section('content')
-    <div class="mb-6">
-        <h1 class="text-2xl font-semibold text-ink-950">Vendor bills</h1>
-        <p class="mt-1 text-sm text-ink-500">Create from received purchase orders, then post and pay.</p>
-    </div>
+    <p class="mb-3 text-secondary">Create from received purchase orders, then post and pay.</p>
 
     <x-table :headers="['Number', 'Vendor', 'Status', 'Total', 'Due', '']">
         @forelse ($bills as $bill)
             <tr>
-                <td class="px-4 py-3 font-mono text-xs text-ink-800">{{ $bill->number }}</td>
-                <td class="px-4 py-3 text-ink-700">{{ $bill->vendor?->name }}</td>
-                <td class="px-4 py-3">
+                <td class="font-monospace small">{{ $bill->number }}</td>
+                <td>{{ $bill->vendor?->name }}</td>
+                <td>
                     @php
                         $tone = $bill->isPaid() ? 'success' : ($bill->isPosted() ? 'brand' : 'warning');
                         $label = $bill->isPaid() ? 'paid' : $bill->status;
                     @endphp
                     <x-badge :tone="$tone">{{ $label }}</x-badge>
                 </td>
-                <td class="px-4 py-3 text-ink-700">{{ $bill->formattedGrandTotal() }}</td>
-                <td class="px-4 py-3 text-ink-700">{{ $bill->formattedAmountDue() }}</td>
-                <td class="px-4 py-3 text-right">
+                <td>{{ $bill->formattedGrandTotal() }}</td>
+                <td>{{ $bill->formattedAmountDue() }}</td>
+                <td class="text-end">
                     <x-button href="{{ route('tenant.bills.show', $bill) }}" variant="ghost">View</x-button>
                 </td>
             </tr>
         @empty
-            <tr><td colspan="6" class="px-4 py-8 text-center text-sm text-ink-500">No bills yet. Create one from a received purchase order.</td></tr>
+            <tr><td colspan="6" class="text-center text-secondary">No bills yet. Create one from a received purchase order.</td></tr>
         @endforelse
     </x-table>
 @endsection

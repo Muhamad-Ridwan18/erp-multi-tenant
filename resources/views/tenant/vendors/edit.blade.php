@@ -5,10 +5,9 @@
 @section('page-subtitle', $vendor->name)
 
 @section('content')
-    <div class="mb-6 flex flex-wrap items-start justify-between gap-3">
-        <h1 class="text-2xl font-semibold text-ink-950">{{ $vendor->name }}</h1>
+    <div class="mb-3 d-flex flex-wrap align-items-start justify-content-between gap-2">
         @can('procurement.vendors.delete')
-            <form method="POST" action="{{ route('tenant.vendors.destroy', $vendor) }}" onsubmit="return confirm('Delete this vendor?')">
+            <form method="POST" action="{{ route('tenant.vendors.destroy', $vendor) }}" onsubmit="return confirm('Delete this vendor?')" class="ms-auto">
                 @csrf
                 @method('DELETE')
                 <x-button type="submit" variant="danger">Delete</x-button>
@@ -16,27 +15,23 @@
         @endcan
     </div>
 
-    <div class="max-w-xl">
-        <form method="POST" action="{{ route('tenant.vendors.update', $vendor) }}" class="space-y-6">
-            @csrf
-            @method('PUT')
-            <x-card class="space-y-4">
-                <x-input label="Name" name="name" value="{{ old('name', $vendor->name) }}" required autofocus />
-                <x-input label="Email" name="email" type="email" value="{{ old('email', $vendor->email) }}" />
-                <x-input label="Phone" name="phone" value="{{ old('phone', $vendor->phone) }}" />
-                <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-ink-800">Address</label>
-                    <textarea name="address" rows="3" class="w-full rounded-lg border border-line px-3 py-2 text-sm">{{ old('address', $vendor->address) }}</textarea>
+    <div class="row">
+        <div class="col-lg-8">
+            <form method="POST" action="{{ route('tenant.vendors.update', $vendor) }}" class="vstack gap-3">
+                @csrf
+                @method('PUT')
+                <x-card>
+                    <x-input label="Name" name="name" value="{{ old('name', $vendor->name) }}" required autofocus />
+                    <x-input label="Email" name="email" type="email" value="{{ old('email', $vendor->email) }}" />
+                    <x-input label="Phone" name="phone" value="{{ old('phone', $vendor->phone) }}" />
+                    <x-textarea label="Address" name="address" rows="3">{{ old('address', $vendor->address) }}</x-textarea>
+                    <x-textarea label="Notes" name="notes" rows="2">{{ old('notes', $vendor->notes) }}</x-textarea>
+                </x-card>
+                <div class="d-flex gap-2">
+                    <x-button>Save</x-button>
+                    <x-button href="{{ route('tenant.vendors.index') }}" variant="ghost">Cancel</x-button>
                 </div>
-                <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-ink-800">Notes</label>
-                    <textarea name="notes" rows="2" class="w-full rounded-lg border border-line px-3 py-2 text-sm">{{ old('notes', $vendor->notes) }}</textarea>
-                </div>
-            </x-card>
-            <div class="flex gap-3">
-                <x-button>Save</x-button>
-                <x-button href="{{ route('tenant.vendors.index') }}" variant="ghost">Cancel</x-button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 @endsection

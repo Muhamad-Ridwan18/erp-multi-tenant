@@ -7,123 +7,46 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen">
-    @auth
-        @php
-            $user = auth()->user();
-            $isTenantHost = \App\Support\TenantContext::check();
-        @endphp
+<body>
+@auth
+    @php
+        $user = auth()->user();
+        $isTenantHost = \App\Support\TenantContext::check();
+    @endphp
 
-        <div class="min-h-screen lg:grid lg:grid-cols-[16rem_1fr]">
-            <aside class="border-b border-line bg-ink-950 text-ink-50 lg:border-b-0 lg:border-r lg:min-h-screen">
-                <div class="px-5 py-5">
-                    <a href="{{ $isTenantHost ? route('dashboard') : route('platform.tenants.index') }}" class="block">
-                        <div class="text-lg font-semibold tracking-tight text-white">Daksa</div>
-                        <div class="text-xs text-ink-300">ERP multi-tenant</div>
-                    </a>
+    <div class="page">
+        @include('layouts.partials.sidebar')
+
+        <div class="page-wrapper">
+            <div class="page-header d-print-none">
+                <div class="container-xl">
+                    <div class="row g-2 align-items-center">
+                        <div class="col">
+                            <div class="page-pretitle">@yield('page-subtitle', $isTenantHost ? (\App\Support\TenantContext::get()?->name ?? 'Tenant') : 'Platform')</div>
+                            <h2 class="page-title">@yield('page-title', 'Workspace')</h2>
+                        </div>
+                        <div class="col-auto ms-auto d-print-none">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="d-none d-sm-inline text-secondary">{{ $user->name }}</span>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <x-button type="submit" variant="ghost">Logout</x-button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </div>
 
-                <nav class="space-y-1 px-3 pb-6 text-sm">
-                    @if ($isTenantHost)
-                        <a href="{{ route('dashboard') }}"
-                           class="block rounded-lg px-3 py-2 {{ request()->routeIs('dashboard') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
-                            Dashboard
-                        </a>
-                        @can('procurement.vendors.view')
-                            <a href="{{ route('tenant.vendors.index') }}"
-                               class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.vendors.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
-                                Vendors
-                            </a>
-                        @endcan
-                        @can('procurement.orders.view')
-                            <a href="{{ route('tenant.purchases.index') }}"
-                               class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.purchases.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
-                                Purchase orders
-                            </a>
-                        @endcan
-                        @can('sales.customers.view')
-                            <a href="{{ route('tenant.customers.index') }}"
-                               class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.customers.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
-                                Customers
-                            </a>
-                        @endcan
-                        @can('inventory.products.view')
-                            <a href="{{ route('tenant.products.index') }}"
-                               class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.products.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
-                                Products
-                            </a>
-                        @endcan
-                        @can('sales.orders.view')
-                            <a href="{{ route('tenant.orders.index') }}"
-                               class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.orders.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
-                                Sales orders
-                            </a>
-                        @endcan
-                        @can('finance.invoices.view')
-                            <a href="{{ route('tenant.invoices.index') }}"
-                               class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.invoices.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
-                                Invoices
-                            </a>
-                        @endcan
-                        @can('finance.bills.view')
-                            <a href="{{ route('tenant.bills.index') }}"
-                               class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.bills.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
-                                Bills
-                            </a>
-                        @endcan
-                        @can('settings.users.view')
-                            <a href="{{ route('tenant.users.index') }}"
-                               class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.users.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
-                                Users
-                            </a>
-                        @endcan
-                        @can('settings.roles.view')
-                            <a href="{{ route('tenant.roles.index') }}"
-                               class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.roles.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
-                                Roles
-                            </a>
-                        @endcan
-                    @else
-                        <a href="{{ route('platform.tenants.index') }}"
-                           class="block rounded-lg px-3 py-2 {{ request()->routeIs('platform.tenants.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
-                            Tenants
-                        </a>
-                    @endif
-                </nav>
-
-                @if ($isTenantHost)
-                    <div class="mt-auto hidden border-t border-ink-800 px-5 py-4 text-xs text-ink-300 lg:block">
-                        <div class="font-medium text-ink-100">{{ \App\Support\TenantContext::get()?->name }}</div>
-                        <div>{{ \App\Support\TenantContext::get()?->status }}</div>
-                    </div>
-                @endif
-            </aside>
-
-            <div class="min-w-0">
-                <header class="flex items-center justify-between gap-4 border-b border-line bg-panel px-4 py-3 sm:px-6">
-                    <div>
-                        <div class="text-sm font-medium text-ink-900">@yield('page-title', 'Workspace')</div>
-                        @hasSection('page-subtitle')
-                            <div class="text-xs text-ink-500">@yield('page-subtitle')</div>
-                        @endif
-                    </div>
-                    <div class="flex items-center gap-3 text-sm">
-                        <span class="hidden text-ink-600 sm:inline">{{ $user->name }}</span>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <x-button type="submit" variant="ghost">Logout</x-button>
-                        </form>
-                    </div>
-                </header>
-
-                <main class="px-4 py-6 sm:px-6">
+            <div class="page-body">
+                <div class="container-xl">
                     @if (session('status'))
-                        <x-alert class="mb-4">{{ session('status') }}</x-alert>
+                        <x-alert class="mb-3">{{ session('status') }}</x-alert>
                     @endif
 
                     @if ($errors->any())
-                        <x-alert type="error" class="mb-4">
-                            <ul class="list-disc pl-4">
+                        <x-alert type="error" class="mb-3">
+                            <ul class="mb-0">
                                 @foreach ($errors->all() as $error)
                                     <li>{{ $error }}</li>
                                 @endforeach
@@ -132,17 +55,20 @@
                     @endif
 
                     @yield('content')
-                </main>
+                </div>
             </div>
         </div>
+    </div>
 
-        @if ($isTenantHost)
-            <x-quick-create-dialog />
-        @endif
-    @else
-        <main class="min-h-screen">
+    @if ($isTenantHost)
+        <x-quick-create-dialog />
+    @endif
+@else
+    <div class="page page-center">
+        <div class="container container-tight py-4">
             @yield('content')
-        </main>
-    @endauth
+        </div>
+    </div>
+@endauth
 </body>
 </html>

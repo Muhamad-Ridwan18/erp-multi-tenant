@@ -5,18 +5,15 @@
 @section('page-subtitle', 'Sales')
 
 @section('content')
-    <div class="mb-6">
-        <h1 class="text-2xl font-semibold text-ink-950">New sales order</h1>
-        <p class="mt-1 text-sm text-ink-500">Lines, discount/tax, terms — Aureus-style document form.</p>
-    </div>
+    <p class="mb-3 text-secondary">Lines, discount/tax, terms — Aureus-style document form.</p>
 
     @if ($customers->isEmpty() || $products->isEmpty())
-        <x-alert type="error" class="mb-4">
+        <x-alert type="error" class="mb-3">
             Add at least one customer and one active product before creating an order.
         </x-alert>
     @endif
 
-    <form method="POST" action="{{ route('tenant.orders.store') }}" class="space-y-6">
+    <form method="POST" action="{{ route('tenant.orders.store') }}" class="vstack gap-3">
         @csrf
 
         <x-card>
@@ -54,7 +51,7 @@
             </x-tab-panel>
         </x-tabs>
 
-        <div class="flex flex-wrap gap-3">
+        <div class="d-flex flex-wrap gap-2">
             <x-button :disabled="$customers->isEmpty() || $products->isEmpty()">Create draft</x-button>
             <x-button href="{{ route('tenant.orders.index') }}" variant="ghost">Cancel</x-button>
         </div>

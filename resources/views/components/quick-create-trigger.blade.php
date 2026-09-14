@@ -1,15 +1,15 @@
 @props([
-    'type' => 'customer', // customer|vendor
+    'type' => 'customer',
     'storeUrl',
     'selectId',
     'canCreate' => false,
 ])
 
 @if ($canCreate)
-    <div class="mt-1.5">
+    <div class="mt-n2 mb-3">
         <button
             type="button"
-            class="text-xs font-medium text-ink-600 underline hover:text-ink-900"
+            class="btn btn-link btn-sm px-0"
             data-open-quick-create
             data-quick-type="{{ $type }}"
             data-quick-url="{{ $storeUrl }}"

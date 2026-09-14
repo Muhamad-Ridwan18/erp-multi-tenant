@@ -5,11 +5,8 @@
 @section('page-subtitle', 'Inventory')
 
 @section('content')
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-            <h1 class="text-2xl font-semibold text-ink-950">Products</h1>
-            <p class="mt-1 text-sm text-ink-500">Catalog and stock on hand.</p>
-        </div>
+    <div class="mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <p class="mb-0 text-secondary">Catalog and stock on hand.</p>
         @can('inventory.products.create')
             <x-button href="{{ route('tenant.products.create') }}">New product</x-button>
         @endcan
@@ -18,21 +15,21 @@
     <x-table :headers="['SKU', 'Name', 'Price', 'Stock', 'Status', '']">
         @forelse ($products as $product)
             <tr>
-                <td class="px-4 py-3 font-mono text-xs text-ink-700">{{ $product->sku }}</td>
-                <td class="px-4 py-3 font-medium text-ink-900">{{ $product->name }}</td>
-                <td class="px-4 py-3 text-ink-600">{{ $product->formattedPrice() }}</td>
-                <td class="px-4 py-3 text-ink-600">{{ $product->stock_qty }} {{ $product->unit }}</td>
-                <td class="px-4 py-3">
+                <td class="font-monospace small">{{ $product->sku }}</td>
+                <td class="fw-medium">{{ $product->name }}</td>
+                <td>{{ $product->formattedPrice() }}</td>
+                <td>{{ $product->stock_qty }} {{ $product->unit }}</td>
+                <td>
                     <x-badge :tone="$product->is_active ? 'success' : 'neutral'">{{ $product->is_active ? 'Active' : 'Inactive' }}</x-badge>
                 </td>
-                <td class="px-4 py-3 text-right">
+                <td class="text-end">
                     @can('inventory.products.update')
                         <x-button href="{{ route('tenant.products.edit', $product) }}" variant="ghost">Edit</x-button>
                     @endcan
                 </td>
             </tr>
         @empty
-            <tr><td colspan="6" class="px-4 py-8 text-center text-sm text-ink-500">No products yet.</td></tr>
+            <tr><td colspan="6" class="text-center text-secondary">No products yet.</td></tr>
         @endforelse
     </x-table>
 @endsection

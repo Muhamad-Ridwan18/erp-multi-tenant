@@ -5,10 +5,9 @@
 @section('page-subtitle', $userModel->email)
 
 @section('content')
-    <div class="mb-6 flex flex-wrap items-start justify-between gap-3">
-        <h1 class="text-2xl font-semibold text-ink-950">Edit user</h1>
+    <div class="mb-3 d-flex flex-wrap align-items-start justify-content-between gap-2">
         @if ($userModel->id !== auth()->id())
-            <form method="POST" action="{{ route('tenant.users.destroy', $userModel) }}" onsubmit="return confirm('Delete this user?')">
+            <form method="POST" action="{{ route('tenant.users.destroy', $userModel) }}" onsubmit="return confirm('Delete this user?')" class="ms-auto">
                 @csrf
                 @method('DELETE')
                 <x-button type="submit" variant="danger">Delete</x-button>
@@ -16,28 +15,34 @@
         @endif
     </div>
 
-    <form method="POST" action="{{ route('tenant.users.update', $userModel) }}" class="max-w-xl space-y-6">
-        @csrf
-        @method('PUT')
-        <x-card class="space-y-4">
-            <x-input label="Name" name="name" value="{{ old('name', $userModel->name) }}" required />
-            <x-input label="Email" name="email" type="email" value="{{ old('email', $userModel->email) }}" required />
-            <x-input label="New password" name="password" type="password" help="Leave blank to keep current password." />
-        </x-card>
-        <x-card>
-            <h2 class="mb-3 font-medium text-ink-900">Roles</h2>
-            <div class="grid gap-2 sm:grid-cols-2">
-                @foreach ($roles as $role)
-                    <label class="flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm">
-                        <input type="checkbox" name="roles[]" value="{{ $role->id }}" @checked(in_array($role->id, old('roles', $selectedRoles), false))>
-                        {{ $role->name }}
-                    </label>
-                @endforeach
-            </div>
-        </x-card>
-        <div class="flex gap-3">
-            <x-button>Save</x-button>
-            <x-button href="{{ route('tenant.users.index') }}" variant="ghost">Cancel</x-button>
+    <div class="row">
+        <div class="col-lg-8">
+            <form method="POST" action="{{ route('tenant.users.update', $userModel) }}" class="vstack gap-3">
+                @csrf
+                @method('PUT')
+                <x-card>
+                    <x-input label="Name" name="name" value="{{ old('name', $userModel->name) }}" required />
+                    <x-input label="Email" name="email" type="email" value="{{ old('email', $userModel->email) }}" required />
+                    <x-input label="New password" name="password" type="password" help="Leave blank to keep current password." />
+                </x-card>
+                <x-card>
+                    <h2 class="h3 mb-3">Roles</h2>
+                    <div class="row g-2">
+                        @foreach ($roles as $role)
+                            <div class="col-sm-6">
+                                <label class="form-check border rounded p-2 mb-0">
+                                    <input type="checkbox" name="roles[]" value="{{ $role->id }}" class="form-check-input" @checked(in_array($role->id, old('roles', $selectedRoles), false))>
+                                    <span class="form-check-label">{{ $role->name }}</span>
+                                </label>
+                            </div>
+                        @endforeach
+                    </div>
+                </x-card>
+                <div class="d-flex gap-2">
+                    <x-button>Save</x-button>
+                    <x-button href="{{ route('tenant.users.index') }}" variant="ghost">Cancel</x-button>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
 @endsection

@@ -5,18 +5,15 @@
 @section('page-subtitle', 'Procurement')
 
 @section('content')
-    <div class="mb-6">
-        <h1 class="text-2xl font-semibold text-ink-950">New purchase order</h1>
-        <p class="mt-1 text-sm text-ink-500">Vendor, lines with discount/tax, and terms.</p>
-    </div>
+    <p class="mb-3 text-secondary">Vendor, lines with discount/tax, and terms.</p>
 
     @if ($vendors->isEmpty() || $products->isEmpty())
-        <x-alert type="error" class="mb-4">
+        <x-alert type="error" class="mb-3">
             Add at least one vendor and one active product before creating a purchase order.
         </x-alert>
     @endif
 
-    <form method="POST" action="{{ route('tenant.purchases.store') }}" class="space-y-6">
+    <form method="POST" action="{{ route('tenant.purchases.store') }}" class="vstack gap-3">
         @csrf
 
         <x-card>
@@ -54,7 +51,7 @@
             </x-tab-panel>
         </x-tabs>
 
-        <div class="flex flex-wrap gap-3">
+        <div class="d-flex flex-wrap gap-2">
             <x-button :disabled="$vendors->isEmpty() || $products->isEmpty()">Create draft</x-button>
             <x-button href="{{ route('tenant.purchases.index') }}" variant="ghost">Cancel</x-button>
         </div>

@@ -5,11 +5,8 @@
 @section('page-subtitle', 'Partners')
 
 @section('content')
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-            <h1 class="text-2xl font-semibold text-ink-950">Customers</h1>
-            <p class="mt-1 text-sm text-ink-500">Companies and people you sell to.</p>
-        </div>
+    <div class="mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <p class="mb-0 text-secondary">Companies and people you sell to.</p>
         @can('sales.customers.create')
             <x-button href="{{ route('tenant.customers.create') }}">New customer</x-button>
         @endcan
@@ -18,17 +15,17 @@
     <x-table :headers="['Name', 'Email', 'Phone', '']">
         @forelse ($customers as $customer)
             <tr>
-                <td class="px-4 py-3 font-medium text-ink-900">{{ $customer->name }}</td>
-                <td class="px-4 py-3 text-ink-600">{{ $customer->email ?: '—' }}</td>
-                <td class="px-4 py-3 text-ink-600">{{ $customer->phone ?: '—' }}</td>
-                <td class="px-4 py-3 text-right">
+                <td class="fw-medium">{{ $customer->name }}</td>
+                <td class="text-secondary">{{ $customer->email ?: '—' }}</td>
+                <td class="text-secondary">{{ $customer->phone ?: '—' }}</td>
+                <td class="text-end">
                     @can('sales.customers.update')
                         <x-button href="{{ route('tenant.customers.edit', $customer) }}" variant="ghost">Edit</x-button>
                     @endcan
                 </td>
             </tr>
         @empty
-            <tr><td colspan="4" class="px-4 py-8 text-center text-sm text-ink-500">No customers yet.</td></tr>
+            <tr><td colspan="4" class="text-center text-secondary">No customers yet.</td></tr>
         @endforelse
     </x-table>
 @endsection

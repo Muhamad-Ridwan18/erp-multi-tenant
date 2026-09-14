@@ -22,9 +22,13 @@ Sales invoicing      → customer invoice (finance)
 PO billing           → vendor bill (finance)
 ```
 
+## Admin UI shell
+
+Admin layout uses **[Tabler](https://github.com/tabler/tabler)** (`@tabler/core` via Vite): vertical sidebar, page header, Bootstrap 5 utilities. Document forms stay Blade + Tom Select (no Filament).
+
 ## Form UX (vs Aureus reference)
 
-Daksa stays **Blade + Vite** (no Filament). Document forms mimic Aureus patterns:
+Document forms mimic Aureus patterns:
 
 - Searchable selects (Tom Select)
 - Table-style order lines (product / qty / price / disc% / tax% / amount)

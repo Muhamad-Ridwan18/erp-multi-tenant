@@ -5,7 +5,7 @@
 
 <div
     data-tab-panel="{{ $name }}"
-    @class(['space-y-4', 'hidden' => ! $active])
+    @class(['d-none' => ! $active])
 >
     {{ $slot }}
 </div>

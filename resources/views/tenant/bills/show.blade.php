@@ -5,22 +5,19 @@
 @section('page-subtitle', $bill->number)
 
 @section('content')
-    <div class="mb-6 flex flex-wrap items-start justify-between gap-3">
-        <div>
-            <h1 class="text-2xl font-semibold text-ink-950">{{ $bill->number }}</h1>
-            <div class="mt-2 flex flex-wrap items-center gap-2">
-                @php
-                    $tone = $bill->isPaid() ? 'success' : ($bill->isPosted() ? 'brand' : 'warning');
-                    $label = $bill->isPaid() ? 'paid' : $bill->status;
-                @endphp
-                <x-badge :tone="$tone">{{ $label }}</x-badge>
-                <span class="text-sm text-ink-500">{{ $bill->vendor?->name }}</span>
-                @if ($bill->purchaseOrder)
-                    <a href="{{ route('tenant.purchases.show', $bill->purchaseOrder) }}" class="text-sm text-ink-600 underline">{{ $bill->purchaseOrder->number }}</a>
-                @endif
-            </div>
+    <div class="mb-3 d-flex flex-wrap align-items-start justify-content-between gap-2">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            @php
+                $tone = $bill->isPaid() ? 'success' : ($bill->isPosted() ? 'brand' : 'warning');
+                $label = $bill->isPaid() ? 'paid' : $bill->status;
+            @endphp
+            <x-badge :tone="$tone">{{ $label }}</x-badge>
+            <span class="text-secondary">{{ $bill->vendor?->name }}</span>
+            @if ($bill->purchaseOrder)
+                <a href="{{ route('tenant.purchases.show', $bill->purchaseOrder) }}" class="small">{{ $bill->purchaseOrder->number }}</a>
+            @endif
         </div>
-        <div class="flex flex-wrap gap-2">
+        <div class="d-flex flex-wrap gap-2">
             @if ($bill->isDraft())
                 @can('finance.bills.post')
                     <form method="POST" action="{{ route('tenant.bills.post', $bill) }}" onsubmit="return confirm('Post this bill?')">
@@ -40,58 +37,68 @@
         </div>
     </div>
 
-    <div class="grid gap-4 lg:grid-cols-3">
-        <x-card>
-            <div class="text-xs uppercase tracking-wide text-ink-500">Vendor</div>
-            <div class="mt-2 font-semibold">{{ $bill->vendor?->name }}</div>
-        </x-card>
-        <x-card>
-            <div class="text-xs uppercase tracking-wide text-ink-500">Total</div>
-            <div class="mt-2 text-lg font-semibold">{{ $bill->formattedGrandTotal() }}</div>
-            <div class="text-sm text-ink-500">Paid Rp {{ number_format($bill->amount_paid, 0, ',', '.') }}</div>
-        </x-card>
-        <x-card>
-            <div class="text-xs uppercase tracking-wide text-ink-500">Amount due</div>
-            <div class="mt-2 text-lg font-semibold">{{ $bill->formattedAmountDue() }}</div>
-        </x-card>
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <x-card>
+                <div class="text-secondary text-uppercase small">Vendor</div>
+                <div class="mt-2 fw-bold">{{ $bill->vendor?->name }}</div>
+            </x-card>
+        </div>
+        <div class="col-lg-4">
+            <x-card>
+                <div class="text-secondary text-uppercase small">Total</div>
+                <div class="mt-2 fw-bold fs-4">{{ $bill->formattedGrandTotal() }}</div>
+                <div class="text-secondary small">Paid Rp {{ number_format($bill->amount_paid, 0, ',', '.') }}</div>
+            </x-card>
+        </div>
+        <div class="col-lg-4">
+            <x-card>
+                <div class="text-secondary text-uppercase small">Amount due</div>
+                <div class="mt-2 fw-bold fs-4">{{ $bill->formattedAmountDue() }}</div>
+            </x-card>
+        </div>
     </div>
 
-    <x-table class="mt-6" :headers="['Description', 'Qty', 'Unit price', 'Line total']">
+    <x-table class="mt-3" :headers="['Description', 'Qty', 'Unit price', 'Line total']">
         @foreach ($bill->items as $item)
             <tr>
-                <td class="px-4 py-3 font-medium text-ink-900">{{ $item->description }}</td>
-                <td class="px-4 py-3 text-ink-600">{{ $item->quantity }}</td>
-                <td class="px-4 py-3 text-ink-600">Rp {{ number_format($item->unit_price, 0, ',', '.') }}</td>
-                <td class="px-4 py-3 text-ink-600">Rp {{ number_format($item->line_total, 0, ',', '.') }}</td>
+                <td class="fw-medium">{{ $item->description }}</td>
+                <td>{{ $item->quantity }}</td>
+                <td>Rp {{ number_format($item->unit_price, 0, ',', '.') }}</td>
+                <td>Rp {{ number_format($item->line_total, 0, ',', '.') }}</td>
             </tr>
         @endforeach
     </x-table>
 
     @if ($bill->isPosted() && ! $bill->isPaid())
         @can('finance.payments.create')
-            <form method="POST" action="{{ route('tenant.bills.pay', $bill) }}" class="mt-6 max-w-md space-y-4">
+            <form method="POST" action="{{ route('tenant.bills.pay', $bill) }}" class="mt-3">
                 @csrf
-                <x-card class="space-y-4">
-                    <h2 class="font-medium text-ink-900">Record payment</h2>
-                    <x-input label="Amount (Rp)" name="amount" type="number" min="1" max="{{ $bill->amountDue() }}" value="{{ old('amount', $bill->amountDue()) }}" required />
-                    <x-input label="Notes" name="notes" value="{{ old('notes') }}" />
-                    <x-button>Save payment</x-button>
-                </x-card>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <x-card>
+                            <h2 class="h3 mb-3">Record payment</h2>
+                            <x-input label="Amount (Rp)" name="amount" type="number" min="1" max="{{ $bill->amountDue() }}" value="{{ old('amount', $bill->amountDue()) }}" required />
+                            <x-input label="Notes" name="notes" value="{{ old('notes') }}" />
+                            <x-button>Save payment</x-button>
+                        </x-card>
+                    </div>
+                </div>
             </form>
         @endcan
     @endif
 
     @if ($bill->payments->isNotEmpty())
-        <x-card class="mt-6" :padding="false">
-            <div class="border-b border-line px-6 py-4 font-medium text-ink-900">Payments</div>
-            <ul class="divide-y divide-line text-sm">
+        <x-card class="mt-3" :padding="false">
+            <div class="card-header fw-medium">Payments</div>
+            <ul class="list-group list-group-flush">
                 @foreach ($bill->payments as $payment)
-                    <li class="flex items-center justify-between px-6 py-3">
+                    <li class="list-group-item d-flex align-items-center justify-content-between">
                         <span>
-                            <span class="font-mono text-xs">{{ $payment->number }}</span>
-                            <span class="text-ink-500">{{ $payment->paid_at?->format('d M Y H:i') }}</span>
+                            <span class="font-monospace small">{{ $payment->number }}</span>
+                            <span class="text-secondary">{{ $payment->paid_at?->format('d M Y H:i') }}</span>
                         </span>
-                        <span class="font-medium text-red-700">{{ $payment->formattedAmount() }}</span>
+                        <span class="fw-medium text-danger">{{ $payment->formattedAmount() }}</span>
                     </li>
                 @endforeach
             </ul>
