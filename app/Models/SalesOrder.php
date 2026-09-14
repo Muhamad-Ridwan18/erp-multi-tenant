@@ -17,7 +17,11 @@ class SalesOrder extends Model
         'customer_id',
         'status',
         'subtotal',
+        'discount_total',
+        'tax_total',
+        'grand_total',
         'notes',
+        'terms',
         'confirmed_at',
         'created_by',
     ];
@@ -26,6 +30,9 @@ class SalesOrder extends Model
     {
         return [
             'subtotal' => 'integer',
+            'discount_total' => 'integer',
+            'tax_total' => 'integer',
+            'grand_total' => 'integer',
             'confirmed_at' => 'datetime',
         ];
     }
@@ -68,5 +75,25 @@ class SalesOrder extends Model
     public function formattedSubtotal(): string
     {
         return 'Rp '.number_format($this->subtotal, 0, ',', '.');
+    }
+
+    public function formattedGrandTotal(): string
+    {
+        $amount = $this->grand_total ?: $this->subtotal;
+
+        return 'Rp '.number_format($amount, 0, ',', '.');
+    }
+
+    public function progressStatus(): string
+    {
+        if ($this->invoice?->isPaid()) {
+            return 'paid';
+        }
+
+        if ($this->invoice) {
+            return 'invoiced';
+        }
+
+        return $this->status;
     }
 }

@@ -17,7 +17,11 @@ class PurchaseOrder extends Model
         'vendor_id',
         'status',
         'subtotal',
+        'discount_total',
+        'tax_total',
+        'grand_total',
         'notes',
+        'terms',
         'confirmed_at',
         'received_at',
         'created_by',
@@ -27,6 +31,9 @@ class PurchaseOrder extends Model
     {
         return [
             'subtotal' => 'integer',
+            'discount_total' => 'integer',
+            'tax_total' => 'integer',
+            'grand_total' => 'integer',
             'confirmed_at' => 'datetime',
             'received_at' => 'datetime',
         ];
@@ -75,5 +82,25 @@ class PurchaseOrder extends Model
     public function formattedSubtotal(): string
     {
         return 'Rp '.number_format($this->subtotal, 0, ',', '.');
+    }
+
+    public function formattedGrandTotal(): string
+    {
+        $amount = $this->grand_total ?: $this->subtotal;
+
+        return 'Rp '.number_format($amount, 0, ',', '.');
+    }
+
+    public function progressStatus(): string
+    {
+        if ($this->bill?->isPaid()) {
+            return 'paid';
+        }
+
+        if ($this->bill) {
+            return 'billed';
+        }
+
+        return $this->status;
     }
 }

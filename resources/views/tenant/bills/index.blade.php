@@ -22,7 +22,7 @@
                     @endphp
                     <x-badge :tone="$tone">{{ $label }}</x-badge>
                 </td>
-                <td class="px-4 py-3 text-ink-700">{{ $bill->formattedSubtotal() }}</td>
+                <td class="px-4 py-3 text-ink-700">{{ $bill->formattedGrandTotal() }}</td>
                 <td class="px-4 py-3 text-ink-700">{{ $bill->formattedAmountDue() }}</td>
                 <td class="px-4 py-3 text-right">
                     <x-button href="{{ route('tenant.bills.show', $bill) }}" variant="ghost">View</x-button>

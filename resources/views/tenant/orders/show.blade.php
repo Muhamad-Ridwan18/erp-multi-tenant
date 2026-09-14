@@ -5,6 +5,11 @@
 @section('page-subtitle', $order->number)
 
 @section('content')
+    <x-progress-stepper
+        :steps="['draft' => 'Draft', 'confirmed' => 'Confirmed', 'invoiced' => 'Invoiced', 'paid' => 'Paid']"
+        :current="$order->progressStatus()"
+    />
+
     <div class="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
             <h1 class="text-2xl font-semibold text-ink-950">{{ $order->number }}</h1>
@@ -52,8 +57,9 @@
             <div class="text-sm text-ink-500">{{ $order->customer?->email }}</div>
         </x-card>
         <x-card>
-            <div class="text-xs uppercase tracking-wide text-ink-500">Subtotal</div>
-            <div class="mt-2 text-lg font-semibold">{{ $order->formattedSubtotal() }}</div>
+            <div class="text-xs uppercase tracking-wide text-ink-500">Total</div>
+            <div class="mt-2 text-lg font-semibold">{{ $order->formattedGrandTotal() }}</div>
+            <div class="text-sm text-ink-500">Untaxed {{ $order->formattedSubtotal() }}</div>
         </x-card>
         <x-card>
             <div class="text-xs uppercase tracking-wide text-ink-500">Created by</div>
@@ -64,21 +70,39 @@
         </x-card>
     </div>
 
-    @if ($order->notes)
-        <x-card class="mt-4">
-            <div class="text-xs uppercase tracking-wide text-ink-500">Notes</div>
-            <p class="mt-2 text-sm text-ink-700">{{ $order->notes }}</p>
-        </x-card>
+    @if ($order->notes || $order->terms)
+        <div class="mt-4 grid gap-4 lg:grid-cols-2">
+            @if ($order->notes)
+                <x-card>
+                    <div class="text-xs uppercase tracking-wide text-ink-500">Notes</div>
+                    <p class="mt-2 whitespace-pre-line text-sm text-ink-700">{{ $order->notes }}</p>
+                </x-card>
+            @endif
+            @if ($order->terms)
+                <x-card>
+                    <div class="text-xs uppercase tracking-wide text-ink-500">Terms</div>
+                    <p class="mt-2 whitespace-pre-line text-sm text-ink-700">{{ $order->terms }}</p>
+                </x-card>
+            @endif
+        </div>
     @endif
 
-    <x-table class="mt-6" :headers="['Product', 'Qty', 'Unit price', 'Line total']">
+    <x-table class="mt-6" :headers="['Product', 'Qty', 'Price', 'Disc %', 'Tax %', 'Amount']">
         @foreach ($order->items as $item)
             <tr>
                 <td class="px-4 py-3 font-medium text-ink-900">{{ $item->product?->name }}</td>
                 <td class="px-4 py-3 text-ink-600">{{ $item->quantity }}</td>
                 <td class="px-4 py-3 text-ink-600">Rp {{ number_format($item->unit_price, 0, ',', '.') }}</td>
+                <td class="px-4 py-3 text-ink-600">{{ $item->discount_percent }}%</td>
+                <td class="px-4 py-3 text-ink-600">{{ $item->tax_percent }}%</td>
                 <td class="px-4 py-3 text-ink-600">Rp {{ number_format($item->line_total, 0, ',', '.') }}</td>
             </tr>
         @endforeach
     </x-table>
+
+    <div class="mt-4 space-y-1 text-sm">
+        <div class="flex justify-end gap-8"><span class="text-ink-500">Discount</span><span class="min-w-[8rem] text-right">Rp {{ number_format($order->discount_total, 0, ',', '.') }}</span></div>
+        <div class="flex justify-end gap-8"><span class="text-ink-500">Tax</span><span class="min-w-[8rem] text-right">Rp {{ number_format($order->tax_total, 0, ',', '.') }}</span></div>
+        <div class="flex justify-end gap-8 font-semibold"><span>Total</span><span class="min-w-[8rem] text-right">{{ $order->formattedGrandTotal() }}</span></div>
+    </div>
 @endsection

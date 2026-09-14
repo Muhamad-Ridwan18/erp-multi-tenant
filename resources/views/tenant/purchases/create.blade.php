@@ -7,7 +7,7 @@
 @section('content')
     <div class="mb-6">
         <h1 class="text-2xl font-semibold text-ink-950">New purchase order</h1>
-        <p class="mt-1 text-sm text-ink-500">Vendor header + lines. Price autofills from product; editable per line.</p>
+        <p class="mt-1 text-sm text-ink-500">Vendor, lines with discount/tax, and terms.</p>
     </div>
 
     @if ($vendors->isEmpty() || $products->isEmpty())
@@ -20,8 +20,8 @@
         @csrf
 
         <x-card>
-            <div class="grid gap-4 lg:grid-cols-2">
-                <x-select label="Vendor" name="vendor_id" required placeholder="Search vendor…">
+            <div>
+                <x-select id="vendor_id" label="Vendor" name="vendor_id" required placeholder="Search vendor…">
                     <option value="">Select vendor</option>
                     @foreach ($vendors as $vendor)
                         <option value="{{ $vendor->id }}" @selected((string) old('vendor_id') === (string) $vendor->id)>
@@ -29,11 +29,30 @@
                         </option>
                     @endforeach
                 </x-select>
-                <x-textarea label="Notes" name="notes" rows="2">{{ old('notes') }}</x-textarea>
+                <x-quick-create-trigger
+                    type="vendor"
+                    select-id="vendor_id"
+                    :store-url="route('tenant.vendors.quick')"
+                    :can-create="auth()->user()->can('procurement.vendors.create')"
+                />
             </div>
         </x-card>
 
-        <x-document-lines :products="$products" />
+        <x-tabs :tabs="['lines' => 'Order lines', 'other' => 'Other info', 'terms' => 'Terms & conditions']">
+            <x-tab-panel name="lines" :active="true">
+                <x-document-lines :products="$products" />
+            </x-tab-panel>
+            <x-tab-panel name="other">
+                <x-card>
+                    <x-textarea label="Notes" name="notes" rows="4">{{ old('notes') }}</x-textarea>
+                </x-card>
+            </x-tab-panel>
+            <x-tab-panel name="terms">
+                <x-card>
+                    <x-textarea label="Terms & conditions" name="terms" rows="6">{{ old('terms') }}</x-textarea>
+                </x-card>
+            </x-tab-panel>
+        </x-tabs>
 
         <div class="flex flex-wrap gap-3">
             <x-button :disabled="$vendors->isEmpty() || $products->isEmpty()">Create draft</x-button>

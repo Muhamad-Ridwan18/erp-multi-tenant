@@ -15,7 +15,7 @@
         @endcan
     </div>
 
-    <x-table :headers="['Number', 'Customer', 'Status', 'Subtotal', '']">
+    <x-table :headers="['Number', 'Customer', 'Status', 'Total', '']">
         @forelse ($orders as $order)
             <tr>
                 <td class="px-4 py-3 font-mono text-xs text-ink-800">{{ $order->number }}</td>
@@ -23,7 +23,7 @@
                 <td class="px-4 py-3">
                     <x-badge :tone="$order->status === 'confirmed' ? 'success' : 'warning'">{{ $order->status }}</x-badge>
                 </td>
-                <td class="px-4 py-3 text-ink-700">{{ $order->formattedSubtotal() }}</td>
+                <td class="px-4 py-3 text-ink-700">{{ $order->formattedGrandTotal() }}</td>
                 <td class="px-4 py-3 text-right">
                     <x-button href="{{ route('tenant.orders.show', $order) }}" variant="ghost">View</x-button>
                 </td>

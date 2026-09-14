@@ -16,8 +16,12 @@ class Bill extends Model
         'purchase_order_id',
         'status',
         'subtotal',
+        'discount_total',
+        'tax_total',
+        'grand_total',
         'amount_paid',
         'notes',
+        'terms',
         'posted_at',
         'created_by',
     ];
@@ -26,6 +30,9 @@ class Bill extends Model
     {
         return [
             'subtotal' => 'integer',
+            'discount_total' => 'integer',
+            'tax_total' => 'integer',
+            'grand_total' => 'integer',
             'amount_paid' => 'integer',
             'posted_at' => 'datetime',
         ];
@@ -68,7 +75,9 @@ class Bill extends Model
 
     public function amountDue(): int
     {
-        return max(0, $this->subtotal - $this->amount_paid);
+        $total = $this->grand_total ?: $this->subtotal;
+
+        return max(0, $total - $this->amount_paid);
     }
 
     public function isPaid(): bool
@@ -79,6 +88,13 @@ class Bill extends Model
     public function formattedSubtotal(): string
     {
         return 'Rp '.number_format($this->subtotal, 0, ',', '.');
+    }
+
+    public function formattedGrandTotal(): string
+    {
+        $amount = $this->grand_total ?: $this->subtotal;
+
+        return 'Rp '.number_format($amount, 0, ',', '.');
     }
 
     public function formattedAmountDue(): string

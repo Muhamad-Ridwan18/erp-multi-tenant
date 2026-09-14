@@ -53,6 +53,7 @@ Route::middleware(['auth', 'tenant.domain'])->group(function () {
         Route::get('/vendors', [VendorController::class, 'index'])->name('vendors.index');
         Route::get('/vendors/create', [VendorController::class, 'create'])->name('vendors.create');
         Route::post('/vendors', [VendorController::class, 'store'])->name('vendors.store');
+        Route::post('/vendors/quick', [VendorController::class, 'quick'])->name('vendors.quick');
         Route::get('/vendors/{vendor}/edit', [VendorController::class, 'edit'])->name('vendors.edit');
         Route::put('/vendors/{vendor}', [VendorController::class, 'update'])->name('vendors.update');
         Route::delete('/vendors/{vendor}', [VendorController::class, 'destroy'])->name('vendors.destroy');
@@ -80,6 +81,7 @@ Route::middleware(['auth', 'tenant.domain'])->group(function () {
         Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
         Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
         Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
+        Route::post('/customers/quick', [CustomerController::class, 'quick'])->name('customers.quick');
         Route::get('/customers/{customer}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
         Route::put('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
         Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');

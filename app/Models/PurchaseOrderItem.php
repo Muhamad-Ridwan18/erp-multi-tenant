@@ -14,6 +14,8 @@ class PurchaseOrderItem extends Model
         'product_id',
         'quantity',
         'unit_price',
+        'discount_percent',
+        'tax_percent',
         'line_total',
     ];
 
@@ -22,6 +24,8 @@ class PurchaseOrderItem extends Model
         return [
             'quantity' => 'integer',
             'unit_price' => 'integer',
+            'discount_percent' => 'integer',
+            'tax_percent' => 'integer',
             'line_total' => 'integer',
         ];
     }

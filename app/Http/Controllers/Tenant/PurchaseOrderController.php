@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\Vendor;
 use App\Services\PurchaseOrderService;
+use App\Support\DocumentLineCalculator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -46,41 +47,41 @@ class PurchaseOrderController extends Controller
         $data = $request->validate([
             'vendor_id' => ['required', Rule::exists(Vendor::class, 'id')],
             'notes' => ['nullable', 'string'],
+            'terms' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', Rule::exists(Product::class, 'id')],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_price' => ['required', 'integer', 'min:0'],
+            'items.*.discount_percent' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'items.*.tax_percent' => ['nullable', 'integer', 'min:0', 'max:100'],
         ]);
 
         try {
             $order = DB::connection('tenant')->transaction(function () use ($data, $request, $orders) {
-                $subtotal = 0;
-                $linePayload = [];
-
-                foreach ($data['items'] as $row) {
-                    $qty = (int) $row['quantity'];
-                    $unitPrice = (int) $row['unit_price'];
-                    $lineTotal = $unitPrice * $qty;
-                    $subtotal += $lineTotal;
-                    $linePayload[] = [
-                        'product_id' => $row['product_id'],
-                        'quantity' => $qty,
-                        'unit_price' => $unitPrice,
-                        'line_total' => $lineTotal,
-                    ];
-                }
+                $summary = DocumentLineCalculator::summarize($data['items']);
 
                 $order = PurchaseOrder::query()->create([
                     'number' => $orders->nextNumber(),
                     'vendor_id' => $data['vendor_id'],
                     'status' => 'draft',
-                    'subtotal' => $subtotal,
+                    'subtotal' => $summary['subtotal'],
+                    'discount_total' => $summary['discount_total'],
+                    'tax_total' => $summary['tax_total'],
+                    'grand_total' => $summary['grand_total'],
                     'notes' => $data['notes'] ?? null,
+                    'terms' => $data['terms'] ?? null,
                     'created_by' => $request->user()->id,
                 ]);
 
-                foreach ($linePayload as $line) {
-                    $order->items()->create($line);
+                foreach ($summary['lines'] as $line) {
+                    $order->items()->create([
+                        'product_id' => $line['product_id'],
+                        'quantity' => $line['quantity'],
+                        'unit_price' => $line['unit_price'],
+                        'discount_percent' => $line['discount_percent'],
+                        'tax_percent' => $line['tax_percent'],
+                        'line_total' => $line['line_total'],
+                    ]);
                 }
 
                 return $order;

@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Daksa ERP')</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen">
@@ -134,6 +135,10 @@
                 </main>
             </div>
         </div>
+
+        @if ($isTenantHost)
+            <x-quick-create-dialog />
+        @endif
     @else
         <main class="min-h-screen">
             @yield('content')

@@ -47,7 +47,7 @@
         </x-card>
         <x-card>
             <div class="text-xs uppercase tracking-wide text-ink-500">Total</div>
-            <div class="mt-2 text-lg font-semibold">{{ $bill->formattedSubtotal() }}</div>
+            <div class="mt-2 text-lg font-semibold">{{ $bill->formattedGrandTotal() }}</div>
             <div class="text-sm text-ink-500">Paid Rp {{ number_format($bill->amount_paid, 0, ',', '.') }}</div>
         </x-card>
         <x-card>

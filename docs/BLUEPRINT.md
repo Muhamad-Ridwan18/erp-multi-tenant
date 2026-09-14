@@ -27,10 +27,13 @@ PO billing           → vendor bill (finance)
 Daksa stays **Blade + Vite** (no Filament). Document forms mimic Aureus patterns:
 
 - Searchable selects (Tom Select)
-- Table-style order lines (product / qty / price / amount)
+- Table-style order lines (product / qty / price / disc% / tax% / amount)
 - Auto-fill unit price on product pick
-- Live line amounts + document subtotal
+- Live line amounts + untaxed / discount / tax / total
 - Stock warning when qty exceeds on-hand (sales)
+- Tabs: Order lines / Other info / Terms
+- Progress stepper on document show pages
+- Inline create customer/vendor from SO/PO forms
 - Product form: 2/3 + 1/3 layout (identity vs pricing)
 
 

@@ -32,8 +32,12 @@ class FinanceService
                 'sales_order_id' => $order->id,
                 'status' => 'draft',
                 'subtotal' => $order->subtotal,
+                'discount_total' => $order->discount_total ?? 0,
+                'tax_total' => $order->tax_total ?? 0,
+                'grand_total' => $order->grand_total ?: $order->subtotal,
                 'amount_paid' => 0,
                 'notes' => $order->notes,
+                'terms' => $order->terms,
                 'created_by' => $user->id,
             ]);
 
@@ -43,6 +47,8 @@ class FinanceService
                     'description' => $item->product?->name ?? 'Item',
                     'quantity' => $item->quantity,
                     'unit_price' => $item->unit_price,
+                    'discount_percent' => $item->discount_percent ?? 0,
+                    'tax_percent' => $item->tax_percent ?? 0,
                     'line_total' => $item->line_total,
                 ]);
             }
@@ -70,8 +76,12 @@ class FinanceService
                 'purchase_order_id' => $order->id,
                 'status' => 'draft',
                 'subtotal' => $order->subtotal,
+                'discount_total' => $order->discount_total ?? 0,
+                'tax_total' => $order->tax_total ?? 0,
+                'grand_total' => $order->grand_total ?: $order->subtotal,
                 'amount_paid' => 0,
                 'notes' => $order->notes,
+                'terms' => $order->terms,
                 'created_by' => $user->id,
             ]);
 
@@ -81,6 +91,8 @@ class FinanceService
                     'description' => $item->product?->name ?? 'Item',
                     'quantity' => $item->quantity,
                     'unit_price' => $item->unit_price,
+                    'discount_percent' => $item->discount_percent ?? 0,
+                    'tax_percent' => $item->tax_percent ?? 0,
                     'line_total' => $item->line_total,
                 ]);
             }

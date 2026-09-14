@@ -105,7 +105,7 @@ class MvpModulesTest extends TestCase
             ->post('http://acme.localhost/sales/orders', [
                 'customer_id' => $customerId,
                 'items' => [
-                    ['product_id' => $productId, 'quantity' => 3, 'unit_price' => 15000],
+                    ['product_id' => $productId, 'quantity' => 3, 'unit_price' => 15000, 'discount_percent' => 0, 'tax_percent' => 10],
                 ],
             ])
             ->assertRedirect();
@@ -113,6 +113,8 @@ class MvpModulesTest extends TestCase
         app(TenantDatabaseManager::class)->connect($this->tenant);
         $order = SalesOrder::query()->where('status', 'draft')->firstOrFail();
         $this->assertSame(45000, $order->subtotal);
+        $this->assertSame(4500, $order->tax_total);
+        $this->assertSame(49500, $order->grand_total);
         app(TenantDatabaseManager::class)->disconnect();
 
         $this->onTenantHost()

@@ -15,6 +15,8 @@ class InvoiceItem extends Model
         'description',
         'quantity',
         'unit_price',
+        'discount_percent',
+        'tax_percent',
         'line_total',
     ];
 
@@ -23,6 +25,8 @@ class InvoiceItem extends Model
         return [
             'quantity' => 'integer',
             'unit_price' => 'integer',
+            'discount_percent' => 'integer',
+            'tax_percent' => 'integer',
             'line_total' => 'integer',
         ];
     }

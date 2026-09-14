@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
 use App\Models\Vendor;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -43,6 +44,25 @@ class VendorController extends Controller
         return redirect()
             ->route('tenant.vendors.index')
             ->with('status', 'Vendor created.');
+    }
+
+    public function quick(Request $request): JsonResponse
+    {
+        abort_unless($request->user()->can('procurement.vendors.create'), 403);
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:150'],
+            'email' => ['nullable', 'email', 'max:150'],
+            'phone' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        $vendor = Vendor::query()->create($data);
+
+        return response()->json([
+            'id' => $vendor->id,
+            'name' => $vendor->name,
+            'email' => $vendor->email,
+        ]);
     }
 
     public function edit(Request $request, Vendor $vendor): View

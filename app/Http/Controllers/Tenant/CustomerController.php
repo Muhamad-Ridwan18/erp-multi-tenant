@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -26,7 +27,7 @@ class CustomerController extends Controller
         return view('tenant.customers.create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         abort_unless($request->user()->can('sales.customers.create'), 403);
 
@@ -38,11 +39,38 @@ class CustomerController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        Customer::query()->create($data);
+        $customer = Customer::query()->create($data);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'email' => $customer->email,
+            ]);
+        }
 
         return redirect()
             ->route('tenant.customers.index')
             ->with('status', 'Customer created.');
+    }
+
+    public function quick(Request $request): JsonResponse
+    {
+        abort_unless($request->user()->can('sales.customers.create'), 403);
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:150'],
+            'email' => ['nullable', 'email', 'max:150'],
+            'phone' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        $customer = Customer::query()->create($data);
+
+        return response()->json([
+            'id' => $customer->id,
+            'name' => $customer->name,
+            'email' => $customer->email,
+        ]);
     }
 
     public function edit(Request $request, Customer $customer): View
