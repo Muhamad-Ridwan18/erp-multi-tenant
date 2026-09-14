@@ -29,7 +29,7 @@ class PlanSeeder extends Seeder
         );
 
         $starterModules = Module::query()
-            ->whereIn('code', ['partners', 'sales', 'settings'])
+            ->whereIn('code', ['sales', 'settings'])
             ->pluck('id');
 
         $businessModules = Module::query()->pluck('id');

@@ -10,7 +10,7 @@
             <h1 class="text-2xl font-semibold text-ink-950">Customers</h1>
             <p class="mt-1 text-sm text-ink-500">Companies and people you sell to.</p>
         </div>
-        @can('partners.customers.create')
+        @can('sales.customers.create')
             <x-button href="{{ route('tenant.customers.create') }}">New customer</x-button>
         @endcan
     </div>
@@ -22,7 +22,7 @@
                 <td class="px-4 py-3 text-ink-600">{{ $customer->email ?: '—' }}</td>
                 <td class="px-4 py-3 text-ink-600">{{ $customer->phone ?: '—' }}</td>
                 <td class="px-4 py-3 text-right">
-                    @can('partners.customers.update')
+                    @can('sales.customers.update')
                         <x-button href="{{ route('tenant.customers.edit', $customer) }}" variant="ghost">Edit</x-button>
                     @endcan
                 </td>

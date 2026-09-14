@@ -2,6 +2,38 @@
 
 Multi-tenant ERP foundation with **DB-per-tenant** and **subdomain** routing.
 
+Reference ERP: **AureusERP** at `D:\DEV\Daksa\erp` (plugins `purchases`, `inventories`, `sales`, `accounts`/`invoices`).
+
+## Four mandatory business modules
+
+| Daksa module | Aureus reference | Core entities (target) |
+|--------------|------------------|----------------------|
+| **Procurement** | `plugins/webkul/purchases` | Vendors, PO/RFQ, goods receipt → stock |
+| **Inventory** | `plugins/webkul/inventories` | Products, stock moves, warehouses (later) |
+| **Finance** | `plugins/webkul/accounts` + `invoices` | Customer invoices, vendor bills, payments |
+| **Sales** | `plugins/webkul/sales` | Customers, quotations, sales orders → delivery/stock |
+
+Cross-module flows (from Aureus):
+
+```
+Sales order confirm  → delivery / stock out
+Purchase order confirm → goods receipt / stock in
+Sales invoicing      → customer invoice (finance)
+PO billing           → vendor bill (finance)
+```
+
+Daksa keeps a **simpler MVP** first (single warehouse, no lots/routes), then grows toward Aureus parity.
+
+## Current implementation status
+
+| Module | Status | Notes |
+|--------|--------|-------|
+| Procurement | Partial | Vendors + PO draft→confirm→receive (stock in) |
+| Inventory | Partial | Products + stock adjust + sale/purchase movements |
+| Finance | Not started | Permission catalog ready |
+| Sales | Partial | Customers, orders draft→confirm |
+| Settings | Done | Users, roles, permissions |
+
 ## Concepts
 
 ```
@@ -32,7 +64,7 @@ TENANCY_DB_PREFIX=daksa_t_
 | Connection | Contents |
 |------------|----------|
 | `central` | tenants, plans, modules, subscriptions, platform users |
-| `tenant` (runtime) | users, roles, permissions, pivots, cache/jobs |
+| `tenant` (runtime) | users, roles, permissions, business tables, cache/jobs |
 
 Creating a tenant **automatically**:
 
@@ -48,6 +80,8 @@ Gate::authorize('sales.orders.view');
 ```
 
 Platform admins (central only) bypass permission checks.
+
+Permission pattern: `{module}.{resource}.{action}` (e.g. `procurement.orders.confirm`).
 
 ## Demo accounts (after migrate --seed)
 
@@ -67,8 +101,6 @@ server {
 
     root /var/www/Daksa-Erp/public;
     index index.php;
-
-    # ssl_certificate ... (wildcard recommended)
 
     location / {
         try_files $uri $uri/ /index.php?$query_string;
@@ -92,7 +124,6 @@ php artisan tenants:migrate --tenant=demo
 ## Run locally
 
 ```bash
-# hosts or use *.localhost (Chrome resolves *.localhost)
 php artisan migrate:fresh --seed
 php artisan serve --host=127.0.0.1 --port=8001
 ```
@@ -100,8 +131,15 @@ php artisan serve --host=127.0.0.1 --port=8001
 - Platform: http://localhost:8001/login  
 - Tenant: http://demo.localhost:8001/login (set `TENANCY_BASE_HOST=localhost`)
 
-## Next
+## Suggested build order
 
-- Billing / payment gateway
+1. **Sales** — move customers under Sales; quotations (optional)
+2. **Procurement** — vendors + PO draft→confirm→receipt (stock in)
+3. **Finance** — invoice from confirmed SO; bill from confirmed PO
+4. **Inventory** — warehouses, transfer, richer stock moves
+
+## Later
+
+- Billing / payment gateway (SaaS subscription)
 - Realtime events
-- Sales / Inventory CRUD modules
+- Aureus-level inventory (routes, lots, replenishment)

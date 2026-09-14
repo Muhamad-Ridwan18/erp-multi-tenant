@@ -66,3 +66,22 @@ document.addEventListener('click', (event) => {
         }
     }
 });
+
+document.addEventListener('change', (event) => {
+    const select = event.target.closest('[data-product-select]');
+    if (!select) {
+        return;
+    }
+
+    const line = select.closest('[data-line]');
+    const priceInput = line?.querySelector('[data-unit-price]');
+    if (!priceInput) {
+        return;
+    }
+
+    const option = select.selectedOptions[0];
+    const price = option?.getAttribute('data-price');
+    if (price !== null && price !== undefined && price !== '') {
+        priceInput.value = price;
+    }
+});

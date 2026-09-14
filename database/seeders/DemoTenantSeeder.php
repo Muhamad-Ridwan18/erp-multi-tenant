@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Permission;
 use App\Models\Plan;
 use App\Models\Role;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\TenantProvisioner;
 use App\Support\TenantDatabaseManager;
@@ -27,7 +28,7 @@ class DemoTenantSeeder extends Seeder
         $provisioner = app(TenantProvisioner::class);
         $databases = app(TenantDatabaseManager::class);
 
-        $existing = \App\Models\Tenant::query()->where('slug', 'demo')->first();
+        $existing = Tenant::query()->where('slug', 'demo')->first();
         if ($existing) {
             $databases->dropDatabase($existing);
             $existing->subscriptions()->delete();
@@ -54,7 +55,7 @@ class DemoTenantSeeder extends Seeder
 
             $enabledModules = $tenant->enabledModuleCodes();
             $salesPermissionIds = Permission::query()
-                ->whereIn('module_code', ['partners', 'sales'])
+                ->where('module_code', 'sales')
                 ->whereIn('action', ['view', 'create', 'update', 'confirm', 'send'])
                 ->pluck('id')
                 ->all();

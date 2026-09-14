@@ -28,7 +28,19 @@
                            class="block rounded-lg px-3 py-2 {{ request()->routeIs('dashboard') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
                             Dashboard
                         </a>
-                        @can('partners.customers.view')
+                        @can('procurement.vendors.view')
+                            <a href="{{ route('tenant.vendors.index') }}"
+                               class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.vendors.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
+                                Vendors
+                            </a>
+                        @endcan
+                        @can('procurement.orders.view')
+                            <a href="{{ route('tenant.purchases.index') }}"
+                               class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.purchases.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
+                                Purchase orders
+                            </a>
+                        @endcan
+                        @can('sales.customers.view')
                             <a href="{{ route('tenant.customers.index') }}"
                                class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.customers.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
                                 Customers

@@ -6,22 +6,32 @@
  */
 return [
     'modules' => [
-        'partners' => 'Partners',
-        'sales' => 'Sales',
+        'procurement' => 'Procurement',
         'inventory' => 'Inventory',
+        'finance' => 'Finance',
+        'sales' => 'Sales',
         'settings' => 'Settings',
     ],
 
     'permissions' => [
-        // Partners
-        ['module' => 'partners', 'resource' => 'customers', 'action' => 'view', 'description' => 'View customers'],
-        ['module' => 'partners', 'resource' => 'customers', 'action' => 'create', 'description' => 'Create customers'],
-        ['module' => 'partners', 'resource' => 'customers', 'action' => 'update', 'description' => 'Update customers'],
-        ['module' => 'partners', 'resource' => 'customers', 'action' => 'delete', 'description' => 'Delete customers'],
-        ['module' => 'partners', 'resource' => 'vendors', 'action' => 'view', 'description' => 'View vendors'],
-        ['module' => 'partners', 'resource' => 'vendors', 'action' => 'create', 'description' => 'Create vendors'],
-        ['module' => 'partners', 'resource' => 'vendors', 'action' => 'update', 'description' => 'Update vendors'],
-        ['module' => 'partners', 'resource' => 'vendors', 'action' => 'delete', 'description' => 'Delete vendors'],
+        // Procurement (ref: Aureus purchases plugin)
+        ['module' => 'procurement', 'resource' => 'vendors', 'action' => 'view', 'description' => 'View vendors'],
+        ['module' => 'procurement', 'resource' => 'vendors', 'action' => 'create', 'description' => 'Create vendors'],
+        ['module' => 'procurement', 'resource' => 'vendors', 'action' => 'update', 'description' => 'Update vendors'],
+        ['module' => 'procurement', 'resource' => 'vendors', 'action' => 'delete', 'description' => 'Delete vendors'],
+        ['module' => 'procurement', 'resource' => 'orders', 'action' => 'view', 'description' => 'View purchase orders'],
+        ['module' => 'procurement', 'resource' => 'orders', 'action' => 'create', 'description' => 'Create purchase orders'],
+        ['module' => 'procurement', 'resource' => 'orders', 'action' => 'update', 'description' => 'Update purchase orders'],
+        ['module' => 'procurement', 'resource' => 'orders', 'action' => 'delete', 'description' => 'Delete purchase orders'],
+        ['module' => 'procurement', 'resource' => 'orders', 'action' => 'confirm', 'description' => 'Confirm purchase orders'],
+        ['module' => 'procurement', 'resource' => 'receipts', 'action' => 'view', 'description' => 'View goods receipts'],
+        ['module' => 'procurement', 'resource' => 'receipts', 'action' => 'receive', 'description' => 'Receive goods into stock'],
+
+        // Sales (ref: Aureus sales plugin)
+        ['module' => 'sales', 'resource' => 'customers', 'action' => 'view', 'description' => 'View customers'],
+        ['module' => 'sales', 'resource' => 'customers', 'action' => 'create', 'description' => 'Create customers'],
+        ['module' => 'sales', 'resource' => 'customers', 'action' => 'update', 'description' => 'Update customers'],
+        ['module' => 'sales', 'resource' => 'customers', 'action' => 'delete', 'description' => 'Delete customers'],
 
         // Sales
         ['module' => 'sales', 'resource' => 'orders', 'action' => 'view', 'description' => 'View sales orders'],
@@ -35,7 +45,21 @@ return [
         ['module' => 'sales', 'resource' => 'quotations', 'action' => 'delete', 'description' => 'Delete quotations'],
         ['module' => 'sales', 'resource' => 'quotations', 'action' => 'send', 'description' => 'Send quotations'],
 
-        // Inventory
+        // Finance (ref: Aureus accounts + invoices plugins)
+        ['module' => 'finance', 'resource' => 'invoices', 'action' => 'view', 'description' => 'View customer invoices'],
+        ['module' => 'finance', 'resource' => 'invoices', 'action' => 'create', 'description' => 'Create customer invoices'],
+        ['module' => 'finance', 'resource' => 'invoices', 'action' => 'update', 'description' => 'Update customer invoices'],
+        ['module' => 'finance', 'resource' => 'invoices', 'action' => 'delete', 'description' => 'Delete customer invoices'],
+        ['module' => 'finance', 'resource' => 'invoices', 'action' => 'post', 'description' => 'Post customer invoices'],
+        ['module' => 'finance', 'resource' => 'bills', 'action' => 'view', 'description' => 'View vendor bills'],
+        ['module' => 'finance', 'resource' => 'bills', 'action' => 'create', 'description' => 'Create vendor bills'],
+        ['module' => 'finance', 'resource' => 'bills', 'action' => 'update', 'description' => 'Update vendor bills'],
+        ['module' => 'finance', 'resource' => 'bills', 'action' => 'delete', 'description' => 'Delete vendor bills'],
+        ['module' => 'finance', 'resource' => 'bills', 'action' => 'post', 'description' => 'Post vendor bills'],
+        ['module' => 'finance', 'resource' => 'payments', 'action' => 'view', 'description' => 'View payments'],
+        ['module' => 'finance', 'resource' => 'payments', 'action' => 'create', 'description' => 'Record payments'],
+
+        // Inventory (ref: Aureus inventories plugin)
         ['module' => 'inventory', 'resource' => 'products', 'action' => 'view', 'description' => 'View products'],
         ['module' => 'inventory', 'resource' => 'products', 'action' => 'create', 'description' => 'Create products'],
         ['module' => 'inventory', 'resource' => 'products', 'action' => 'update', 'description' => 'Update products'],

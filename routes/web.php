@@ -5,9 +5,11 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Platform\TenantController;
 use App\Http\Controllers\Tenant\CustomerController;
 use App\Http\Controllers\Tenant\ProductController;
+use App\Http\Controllers\Tenant\PurchaseOrderController;
 use App\Http\Controllers\Tenant\RoleController;
 use App\Http\Controllers\Tenant\SalesOrderController;
 use App\Http\Controllers\Tenant\UserController;
+use App\Http\Controllers\Tenant\VendorController;
 use App\Support\TenantContext;
 use Illuminate\Support\Facades\Route;
 
@@ -45,13 +47,21 @@ Route::middleware(['auth', 'central'])->prefix('platform')->name('platform.')->g
 Route::middleware(['auth', 'tenant.domain'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
-    Route::prefix('partners')->name('tenant.')->group(function () {
-        Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
-        Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
-        Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
-        Route::get('/customers/{customer}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
-        Route::put('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
-        Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
+    Route::prefix('procurement')->name('tenant.')->group(function () {
+        Route::get('/vendors', [VendorController::class, 'index'])->name('vendors.index');
+        Route::get('/vendors/create', [VendorController::class, 'create'])->name('vendors.create');
+        Route::post('/vendors', [VendorController::class, 'store'])->name('vendors.store');
+        Route::get('/vendors/{vendor}/edit', [VendorController::class, 'edit'])->name('vendors.edit');
+        Route::put('/vendors/{vendor}', [VendorController::class, 'update'])->name('vendors.update');
+        Route::delete('/vendors/{vendor}', [VendorController::class, 'destroy'])->name('vendors.destroy');
+
+        Route::get('/purchases', [PurchaseOrderController::class, 'index'])->name('purchases.index');
+        Route::get('/purchases/create', [PurchaseOrderController::class, 'create'])->name('purchases.create');
+        Route::post('/purchases', [PurchaseOrderController::class, 'store'])->name('purchases.store');
+        Route::get('/purchases/{purchase}', [PurchaseOrderController::class, 'show'])->name('purchases.show');
+        Route::post('/purchases/{purchase}/confirm', [PurchaseOrderController::class, 'confirm'])->name('purchases.confirm');
+        Route::post('/purchases/{purchase}/receive', [PurchaseOrderController::class, 'receive'])->name('purchases.receive');
+        Route::delete('/purchases/{purchase}', [PurchaseOrderController::class, 'destroy'])->name('purchases.destroy');
     });
 
     Route::prefix('inventory')->name('tenant.')->group(function () {
@@ -65,6 +75,13 @@ Route::middleware(['auth', 'tenant.domain'])->group(function () {
     });
 
     Route::prefix('sales')->name('tenant.')->group(function () {
+        Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+        Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
+        Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
+        Route::get('/customers/{customer}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
+        Route::put('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
+        Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
+
         Route::get('/orders', [SalesOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/create', [SalesOrderController::class, 'create'])->name('orders.create');
         Route::post('/orders', [SalesOrderController::class, 'store'])->name('orders.store');

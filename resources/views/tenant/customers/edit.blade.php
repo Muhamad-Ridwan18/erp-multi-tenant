@@ -6,7 +6,7 @@
 @section('content')
     <div class="mb-6 flex flex-wrap items-start justify-between gap-3">
         <h1 class="text-2xl font-semibold text-ink-950">Edit customer</h1>
-        @can('partners.customers.delete')
+        @can('sales.customers.delete')
             <form method="POST" action="{{ route('tenant.customers.destroy', $customer) }}" onsubmit="return confirm('Delete this customer?')">
                 @csrf
                 @method('DELETE')
