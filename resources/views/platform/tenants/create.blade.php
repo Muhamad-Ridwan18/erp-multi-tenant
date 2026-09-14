@@ -14,7 +14,7 @@
             <x-card class="space-y-4">
                 <h2 class="font-medium text-ink-900">Company</h2>
                 <x-input label="Name" name="name" value="{{ old('name') }}" required autofocus data-slug-source="tenant" />
-                <x-input label="Slug" name="slug" value="{{ old('slug') }}" required help="Used in URLs and identifiers." data-slug-target="tenant" />
+                <x-input label="Slug" name="slug" value="{{ old('slug') }}" required help="Becomes {{ config('tenancy.base_host') === 'localhost' ? 'slug.localhost' : 'slug.'.config('tenancy.base_host') }} and DB {{ config('tenancy.database_prefix') }}{slug}." data-slug-target="tenant" />
                 <div class="space-y-1.5">
                     <label for="status" class="block text-sm font-medium text-ink-800">Status</label>
                     <select id="status" name="status" class="w-full rounded-lg border border-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink-400/40">

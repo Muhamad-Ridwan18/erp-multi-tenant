@@ -13,7 +13,13 @@
                     {{ $tenant->status }}
                 </x-badge>
                 <span class="text-sm text-ink-500">{{ $tenant->slug }}</span>
+                <span class="font-mono text-xs text-ink-400">{{ $tenant->database }}</span>
             </div>
+            <p class="mt-2 text-sm">
+                <a href="{{ $tenant->domainUrl('/login') }}" class="text-ink-700 underline" target="_blank" rel="noopener">
+                    {{ $tenant->domainUrl('/login') }}
+                </a>
+            </p>
         </div>
         <div class="flex flex-wrap gap-2">
             <x-button href="{{ route('platform.tenants.edit', $tenant) }}" variant="secondary">Edit</x-button>
@@ -34,11 +40,11 @@
         </x-card>
         <x-card>
             <div class="text-xs uppercase tracking-wide text-ink-500">Users</div>
-            <div class="mt-2 text-lg font-semibold">{{ $tenant->users_count }}</div>
+            <div class="mt-2 text-lg font-semibold">{{ $userCount }}</div>
         </x-card>
         <x-card>
             <div class="text-xs uppercase tracking-wide text-ink-500">Roles</div>
-            <div class="mt-2 text-lg font-semibold">{{ $tenant->roles_count }}</div>
+            <div class="mt-2 text-lg font-semibold">{{ $roleCount }}</div>
         </x-card>
     </div>
 
@@ -62,13 +68,13 @@
         <x-card :padding="false">
             <div class="border-b border-line px-6 py-4 font-medium text-ink-900">Users</div>
             <ul class="divide-y divide-line">
-                @forelse ($tenant->users as $user)
+                @forelse ($users as $user)
                     <li class="px-6 py-3 text-sm">
                         <div class="font-medium text-ink-900">{{ $user->name }}</div>
                         <div class="text-ink-500">{{ $user->email }}</div>
                     </li>
                 @empty
-                    <li class="px-6 py-6 text-sm text-ink-500">No users.</li>
+                    <li class="px-6 py-6 text-sm text-ink-500">No users (or database not ready).</li>
                 @endforelse
             </ul>
         </x-card>
@@ -76,7 +82,7 @@
         <x-card :padding="false">
             <div class="border-b border-line px-6 py-4 font-medium text-ink-900">Roles</div>
             <ul class="divide-y divide-line">
-                @forelse ($tenant->roles as $role)
+                @forelse ($roles as $role)
                     <li class="flex items-center justify-between px-6 py-3 text-sm">
                         <span class="font-medium text-ink-900">{{ $role->name }}</span>
                         @if ($role->is_system)

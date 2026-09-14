@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Support\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,7 +13,10 @@ class LoginController extends Controller
 {
     public function create(): View
     {
-        return view('auth.login');
+        return view('auth.login', [
+            'isTenantHost' => TenantContext::check(),
+            'tenant' => TenantContext::get(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -32,11 +36,19 @@ class LoginController extends Controller
 
         $user = $request->user();
 
-        if ($user->isPlatformAdmin()) {
-            return redirect()->intended(route('platform.tenants.index'));
+        if (TenantContext::check()) {
+            return redirect()->intended(route('dashboard'));
         }
 
-        return redirect()->intended(route('dashboard'));
+        if (! $user->isPlatformAdmin()) {
+            Auth::logout();
+
+            return back()
+                ->withInput($request->only('email'))
+                ->withErrors(['email' => 'Platform login requires a platform admin account.']);
+        }
+
+        return redirect()->intended(route('platform.tenants.index'));
     }
 
     public function destroy(Request $request): RedirectResponse

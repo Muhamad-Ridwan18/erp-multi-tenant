@@ -12,9 +12,9 @@ class ExampleTest extends TestCase
             ->assertRedirect(route('login'));
     }
 
-    public function test_login_page_is_ok(): void
+    public function test_login_page_is_ok_on_central_host(): void
     {
-        $this->get(route('login'))
+        $this->get('http://localhost/login')
             ->assertOk();
     }
 }

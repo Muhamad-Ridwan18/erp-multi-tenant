@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Plan extends Model
 {
+    protected $connection = 'central';
+
     protected $fillable = [
         'code',
         'name',

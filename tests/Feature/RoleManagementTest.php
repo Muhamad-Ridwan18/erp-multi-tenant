@@ -5,21 +5,21 @@ namespace Tests\Feature;
 use App\Models\Permission;
 use App\Models\Plan;
 use App\Models\Role;
-use App\Models\Subscription;
-use App\Models\Tenant;
 use App\Models\User;
+use App\Services\TenantProvisioner;
 use App\Support\TenantContext;
+use App\Support\TenantDatabaseManager;
 use Database\Seeders\ModuleSeeder;
-use Database\Seeders\PermissionCatalogSeeder;
 use Database\Seeders\PlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 class RoleManagementTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected Tenant $tenant;
+    protected \App\Models\Tenant $tenant;
 
     protected User $admin;
 
@@ -29,139 +29,142 @@ class RoleManagementTest extends TestCase
     {
         parent::setUp();
 
+        File::ensureDirectoryExists(database_path('tenants'));
+
         $this->seed([
             ModuleSeeder::class,
-            PermissionCatalogSeeder::class,
             PlanSeeder::class,
         ]);
 
-        $this->tenant = Tenant::query()->create([
+        $this->tenant = app(TenantProvisioner::class)->provision([
             'name' => 'Acme',
             'slug' => 'acme',
             'status' => 'active',
-        ]);
-
-        Subscription::query()->create([
-            'tenant_id' => $this->tenant->id,
             'plan_id' => Plan::query()->where('code', 'business')->value('id'),
-            'status' => 'active',
-            'starts_at' => now(),
-            'ends_at' => now()->addYear(),
+            'admin_name' => 'Tenant Admin',
+            'admin_email' => 'admin@acme.test',
+            'admin_password' => 'password',
         ]);
 
-        TenantContext::set($this->tenant);
-
-        $adminRole = Role::query()->create([
-            'tenant_id' => $this->tenant->id,
-            'name' => 'Admin',
-            'is_system' => true,
-        ]);
+        $databases = app(TenantDatabaseManager::class);
+        $databases->connect($this->tenant);
 
         $salesRole = Role::query()->create([
-            'tenant_id' => $this->tenant->id,
             'name' => 'Sales',
             'is_system' => false,
         ]);
-
-        $adminRole->permissions()->sync(
-            Permission::query()->whereIn('module_code', $this->tenant->enabledModuleCodes())->pluck('id')
-        );
 
         $salesRole->permissions()->sync(
             Permission::query()->where('name', 'sales.orders.view')->pluck('id')
         );
 
-        $this->admin = User::factory()->forTenant($this->tenant->id)->create([
-            'email' => 'admin@acme.test',
-        ]);
-        $this->admin->roles()->sync([$adminRole->id]);
+        $this->admin = User::query()->where('email', 'admin@acme.test')->firstOrFail();
 
-        $this->sales = User::factory()->forTenant($this->tenant->id)->create([
+        $this->sales = User::query()->create([
+            'name' => 'Sales User',
             'email' => 'sales@acme.test',
+            'password' => 'password',
         ]);
         $this->sales->roles()->sync([$salesRole->id]);
 
+        $databases->disconnect();
+    }
+
+    protected function tearDown(): void
+    {
         TenantContext::clear();
+        app(TenantDatabaseManager::class)->disconnect();
+
+        foreach (File::glob(database_path('tenants/*.sqlite')) as $file) {
+            File::delete($file);
+        }
+
+        parent::tearDown();
+    }
+
+    protected function onTenantHost(): static
+    {
+        return $this->withServerVariables([
+            'HTTP_HOST' => 'acme.localhost',
+            'SERVER_NAME' => 'acme.localhost',
+        ]);
     }
 
     public function test_sales_user_cannot_manage_roles(): void
     {
-        $this->actingAs($this->sales)
-            ->get(route('tenant.roles.index'))
+        $this->onTenantHost()
+            ->actingAs($this->sales)
+            ->get('http://acme.localhost/settings/roles')
             ->assertForbidden();
     }
 
     public function test_admin_can_create_role_with_unique_name(): void
     {
-        TenantContext::set($this->tenant);
-
-        $this->actingAs($this->admin)
-            ->post(route('tenant.roles.store'), ['name' => 'Warehouse'])
+        $this->onTenantHost()
+            ->actingAs($this->admin)
+            ->post('http://acme.localhost/settings/roles', ['name' => 'Warehouse'])
             ->assertRedirect();
 
-        $this->assertDatabaseHas('roles', [
-            'tenant_id' => $this->tenant->id,
-            'name' => 'Warehouse',
-        ]);
+        app(TenantDatabaseManager::class)->connect($this->tenant);
+        $this->assertDatabaseHas('roles', ['name' => 'Warehouse'], 'tenant');
 
-        $this->actingAs($this->admin)
-            ->post(route('tenant.roles.store'), ['name' => 'Warehouse'])
+        $this->onTenantHost()
+            ->actingAs($this->admin)
+            ->post('http://acme.localhost/settings/roles', ['name' => 'Warehouse'])
             ->assertSessionHasErrors('name');
-
-        TenantContext::clear();
     }
 
     public function test_admin_can_assign_permissions_and_users(): void
     {
-        TenantContext::set($this->tenant);
+        app(TenantDatabaseManager::class)->connect($this->tenant);
 
         $role = Role::query()->create([
-            'tenant_id' => $this->tenant->id,
             'name' => 'Ops',
             'is_system' => false,
         ]);
 
         $permissionId = Permission::query()->where('name', 'sales.orders.confirm')->value('id');
+        app(TenantDatabaseManager::class)->disconnect();
 
-        $this->actingAs($this->admin)
-            ->put(route('tenant.roles.update', $role), [
+        $this->onTenantHost()
+            ->actingAs($this->admin)
+            ->put('http://acme.localhost/settings/roles/'.$role->id, [
                 'name' => 'Ops',
                 'permissions' => [$permissionId],
                 'users' => [$this->sales->id],
             ])
             ->assertRedirect();
 
-        $this->assertTrue($role->fresh()->permissions->contains('id', $permissionId));
-        $this->assertTrue($role->fresh()->users->contains('id', $this->sales->id));
-
-        TenantContext::clear();
+        app(TenantDatabaseManager::class)->connect($this->tenant);
+        $role = Role::query()->findOrFail($role->id);
+        $this->assertTrue($role->permissions->contains('id', $permissionId));
+        $this->assertTrue($role->users->contains('id', $this->sales->id));
     }
 
     public function test_system_role_cannot_be_deleted(): void
     {
-        TenantContext::set($this->tenant);
-
+        app(TenantDatabaseManager::class)->connect($this->tenant);
         $system = Role::query()->where('name', 'Admin')->firstOrFail();
+        app(TenantDatabaseManager::class)->disconnect();
 
-        $this->actingAs($this->admin)
-            ->delete(route('tenant.roles.destroy', $system))
+        $this->onTenantHost()
+            ->actingAs($this->admin)
+            ->delete('http://acme.localhost/settings/roles/'.$system->id)
             ->assertForbidden();
-
-        TenantContext::clear();
     }
 
     public function test_custom_role_can_be_deleted(): void
     {
-        TenantContext::set($this->tenant);
-
+        app(TenantDatabaseManager::class)->connect($this->tenant);
         $role = Role::query()->where('name', 'Sales')->firstOrFail();
+        app(TenantDatabaseManager::class)->disconnect();
 
-        $this->actingAs($this->admin)
-            ->delete(route('tenant.roles.destroy', $role))
-            ->assertRedirect(route('tenant.roles.index'));
+        $this->onTenantHost()
+            ->actingAs($this->admin)
+            ->delete('http://acme.localhost/settings/roles/'.$role->id)
+            ->assertRedirect('http://acme.localhost/settings/roles');
 
-        $this->assertDatabaseMissing('roles', ['id' => $role->id]);
-
-        TenantContext::clear();
+        app(TenantDatabaseManager::class)->connect($this->tenant);
+        $this->assertDatabaseMissing('roles', ['id' => $role->id], 'tenant');
     }
 }

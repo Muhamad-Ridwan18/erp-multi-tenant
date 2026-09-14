@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -34,18 +35,10 @@ class RoleController extends Controller
         abort_unless($request->user()->can('settings.roles.manage'), 403);
 
         $data = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:100',
-                Rule::unique('roles', 'name')->where(
-                    fn ($query) => $query->where('tenant_id', $request->user()->tenant_id)
-                ),
-            ],
+            'name' => ['required', 'string', 'max:100', Rule::unique(Role::class, 'name')],
         ]);
 
         $role = Role::query()->create([
-            'tenant_id' => $request->user()->tenant_id,
             'name' => $data['name'],
             'is_system' => false,
         ]);
@@ -58,10 +51,9 @@ class RoleController extends Controller
     public function edit(Request $request, Role $role): View
     {
         abort_unless($request->user()->can('settings.roles.manage'), 403);
-        abort_unless($role->tenant_id === $request->user()->tenant_id, 404);
 
-        $tenant = $request->user()->tenant;
-        $allowedModules = $tenant->enabledModuleCodes();
+        $tenant = TenantContext::get();
+        $allowedModules = $tenant?->enabledModuleCodes() ?? [];
 
         $permissions = Permission::query()
             ->whereIn('module_code', $allowedModules)
@@ -73,10 +65,7 @@ class RoleController extends Controller
 
         $role->load('permissions', 'users');
 
-        $tenantUsers = User::query()
-            ->where('tenant_id', $request->user()->tenant_id)
-            ->orderBy('name')
-            ->get();
+        $tenantUsers = User::query()->orderBy('name')->get();
 
         return view('tenant.roles.edit', [
             'role' => $role,
@@ -90,33 +79,25 @@ class RoleController extends Controller
     public function update(Request $request, Role $role): RedirectResponse
     {
         abort_unless($request->user()->can('settings.roles.manage'), 403);
-        abort_unless($role->tenant_id === $request->user()->tenant_id, 404);
 
         $data = $request->validate([
             'name' => [
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('roles', 'name')
-                    ->where(fn ($query) => $query->where('tenant_id', $request->user()->tenant_id))
-                    ->ignore($role->id),
+                Rule::unique(Role::class, 'name')->ignore($role->id),
             ],
             'permissions' => ['array'],
-            'permissions.*' => ['integer', 'exists:permissions,id'],
+            'permissions.*' => ['integer', Rule::exists(Permission::class, 'id')],
             'users' => ['array'],
-            'users.*' => [
-                'integer',
-                Rule::exists('users', 'id')->where(
-                    fn ($query) => $query->where('tenant_id', $request->user()->tenant_id)
-                ),
-            ],
+            'users.*' => ['integer', Rule::exists(User::class, 'id')],
         ]);
 
         if (! $role->is_system) {
             $role->update(['name' => $data['name']]);
         }
 
-        $allowedModules = $request->user()->tenant->enabledModuleCodes();
+        $allowedModules = TenantContext::get()?->enabledModuleCodes() ?? [];
         $role->syncPermissionsWithinPlan($data['permissions'] ?? [], $allowedModules);
         $role->users()->sync($data['users'] ?? []);
 
@@ -126,7 +107,6 @@ class RoleController extends Controller
     public function destroy(Request $request, Role $role): RedirectResponse
     {
         abort_unless($request->user()->can('settings.roles.manage'), 403);
-        abort_unless($role->tenant_id === $request->user()->tenant_id, 404);
         abort_if($role->is_system, 403, 'System roles cannot be deleted.');
 
         $role->users()->detach();

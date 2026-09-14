@@ -24,7 +24,13 @@
             </div>
 
             <h1 class="text-2xl font-semibold text-ink-950">Sign in</h1>
-            <p class="mt-1 text-sm text-ink-500">Use your company account or platform credentials.</p>
+            <p class="mt-1 text-sm text-ink-500">
+                @if (! empty($isTenantHost) && $tenant)
+                    {{ $tenant->name }} — tenant workspace
+                @else
+                    Platform console — manage tenants and plans
+                @endif
+            </p>
 
             <x-card class="mt-6 space-y-4">
                 <form method="POST" action="{{ route('login') }}" class="space-y-4">

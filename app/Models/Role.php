@@ -2,17 +2,14 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Role extends Model
 {
-    use BelongsToTenant;
+    protected $connection = 'tenant';
 
     protected $fillable = [
-        'tenant_id',
         'name',
         'is_system',
     ];
@@ -22,11 +19,6 @@ class Role extends Model
         return [
             'is_system' => 'boolean',
         ];
-    }
-
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
     }
 
     public function permissions(): BelongsToMany

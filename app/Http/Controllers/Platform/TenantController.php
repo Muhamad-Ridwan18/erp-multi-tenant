@@ -3,13 +3,11 @@
 namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
-use App\Models\Permission;
 use App\Models\Plan;
-use App\Models\Role;
-use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Support\TenantContext;
+use App\Services\TenantProvisioner;
+use App\Support\TenantDatabaseManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,13 +16,17 @@ use Illuminate\View\View;
 
 class TenantController extends Controller
 {
+    public function __construct(
+        protected TenantProvisioner $provisioner,
+        protected TenantDatabaseManager $databases,
+    ) {}
+
     public function index(Request $request): View
     {
         abort_unless($request->user()?->isPlatformAdmin(), 403);
 
         $tenants = Tenant::query()
             ->with(['activeSubscription.plan'])
-            ->withCount('users', 'roles')
             ->orderBy('name')
             ->get();
 
@@ -46,49 +48,45 @@ class TenantController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:150'],
-            'slug' => ['required', 'string', 'max:150', 'alpha_dash', 'unique:tenants,slug'],
+            'slug' => ['required', 'string', 'max:150', 'alpha_dash', Rule::unique(Tenant::class, 'slug')],
             'status' => ['required', Rule::in(['active', 'trial', 'suspended'])],
-            'plan_id' => ['required', 'exists:plans,id'],
+            'plan_id' => ['required', Rule::exists(Plan::class, 'id')],
             'admin_name' => ['nullable', 'required_with:admin_email,admin_password', 'string', 'max:150'],
-            'admin_email' => ['nullable', 'required_with:admin_name,admin_password', 'email', 'max:150', 'unique:users,email'],
+            'admin_email' => ['nullable', 'required_with:admin_name,admin_password', 'email', 'max:150'],
             'admin_password' => ['nullable', 'required_with:admin_name,admin_email', 'string', 'min:8'],
         ]);
 
-        $tenant = DB::transaction(function () use ($data) {
-            $tenant = Tenant::query()->create([
-                'name' => $data['name'],
-                'slug' => $data['slug'],
-                'status' => $data['status'],
-                'trial_ends_at' => $data['status'] === 'trial' ? now()->addDays(14) : null,
-            ]);
-
-            $this->activatePlan($tenant, (int) $data['plan_id']);
-
-            if (! empty($data['admin_email'])) {
-                $this->provisionTenantAdmin(
-                    $tenant,
-                    $data['admin_name'],
-                    $data['admin_email'],
-                    $data['admin_password']
-                );
-            }
-
-            return $tenant;
-        });
+        $tenant = $this->provisioner->provision($data);
 
         return redirect()
             ->route('platform.tenants.show', $tenant)
-            ->with('status', 'Tenant created.');
+            ->with('status', 'Tenant created and database provisioned.');
     }
 
     public function show(Request $request, Tenant $tenant): View
     {
         abort_unless($request->user()?->isPlatformAdmin(), 403);
 
-        $tenant->load(['activeSubscription.plan.modules', 'users', 'roles'])
-            ->loadCount('users', 'roles');
+        $tenant->load(['activeSubscription.plan.modules']);
 
-        return view('platform.tenants.show', compact('tenant'));
+        $userCount = 0;
+        $roleCount = 0;
+        $users = collect();
+        $roles = collect();
+
+        try {
+            $this->databases->connect($tenant);
+            $userCount = User::query()->count();
+            $roleCount = \App\Models\Role::query()->count();
+            $users = User::query()->orderBy('name')->limit(50)->get();
+            $roles = \App\Models\Role::query()->orderBy('name')->get();
+        } catch (\Throwable) {
+            // Tenant DB may not exist yet.
+        } finally {
+            $this->databases->disconnect();
+        }
+
+        return view('platform.tenants.show', compact('tenant', 'userCount', 'roleCount', 'users', 'roles'));
     }
 
     public function edit(Request $request, Tenant $tenant): View
@@ -107,12 +105,12 @@ class TenantController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:150'],
-            'slug' => ['required', 'string', 'max:150', 'alpha_dash', Rule::unique('tenants', 'slug')->ignore($tenant->id)],
+            'slug' => ['required', 'string', 'max:150', 'alpha_dash', Rule::unique(Tenant::class, 'slug')->ignore($tenant->id)],
             'status' => ['required', Rule::in(['active', 'trial', 'suspended'])],
-            'plan_id' => ['required', 'exists:plans,id'],
+            'plan_id' => ['required', Rule::exists(Plan::class, 'id')],
         ]);
 
-        DB::transaction(function () use ($tenant, $data) {
+        DB::connection('central')->transaction(function () use ($tenant, $data) {
             $tenant->update([
                 'name' => $data['name'],
                 'slug' => $data['slug'],
@@ -124,7 +122,7 @@ class TenantController extends Controller
 
             $currentPlanId = $tenant->activeSubscription?->plan_id;
             if ((int) $currentPlanId !== (int) $data['plan_id']) {
-                $this->activatePlan($tenant, (int) $data['plan_id']);
+                $this->provisioner->activatePlan($tenant, (int) $data['plan_id']);
             }
         });
 
@@ -140,54 +138,5 @@ class TenantController extends Controller
         $tenant->update(['status' => 'suspended']);
 
         return back()->with('status', 'Tenant suspended.');
-    }
-
-    private function activatePlan(Tenant $tenant, int $planId): void
-    {
-        Subscription::query()
-            ->where('tenant_id', $tenant->id)
-            ->where('status', 'active')
-            ->update(['status' => 'cancelled', 'ends_at' => now()]);
-
-        Subscription::query()->create([
-            'tenant_id' => $tenant->id,
-            'plan_id' => $planId,
-            'status' => 'active',
-            'starts_at' => now(),
-            'ends_at' => now()->addYear(),
-        ]);
-    }
-
-    private function provisionTenantAdmin(Tenant $tenant, string $name, string $email, string $password): void
-    {
-        TenantContext::set($tenant);
-
-        try {
-            $adminRole = Role::query()->create([
-                'tenant_id' => $tenant->id,
-                'name' => 'Admin',
-                'is_system' => true,
-            ]);
-
-            $enabledModules = $tenant->enabledModuleCodes();
-            $permissionIds = Permission::query()
-                ->whereIn('module_code', $enabledModules)
-                ->pluck('id')
-                ->all();
-
-            $adminRole->permissions()->sync($permissionIds);
-
-            $admin = User::query()->create([
-                'tenant_id' => $tenant->id,
-                'name' => $name,
-                'email' => $email,
-                'password' => $password,
-                'is_platform_admin' => false,
-            ]);
-
-            $admin->roles()->sync([$adminRole->id]);
-        } finally {
-            TenantContext::clear();
-        }
     }
 }

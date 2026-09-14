@@ -12,8 +12,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(prepend: [
+            \App\Http\Middleware\InitializeTenancy::class,
+        ]);
+
         $middleware->alias([
-            'tenant' => \App\Http\Middleware\SetCurrentTenant::class,
+            'central' => \App\Http\Middleware\EnsureCentralDomain::class,
+            'tenant.domain' => \App\Http\Middleware\EnsureTenantDomain::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Module extends Model
 {
+    protected $connection = 'central';
+
     protected $fillable = [
         'code',
         'name',

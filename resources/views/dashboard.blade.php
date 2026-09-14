@@ -2,7 +2,7 @@
 
 @section('title', 'Dashboard')
 @section('page-title', 'Dashboard')
-@section('page-subtitle', $user->tenant?->name ?? 'Tenant workspace')
+@section('page-subtitle', $tenant?->name ?? 'Tenant workspace')
 
 @section('content')
     <div class="mb-6">
@@ -15,8 +15,8 @@
     <div class="grid gap-4 lg:grid-cols-3">
         <x-card>
             <div class="text-xs uppercase tracking-wide text-ink-500">Tenant</div>
-            <div class="mt-2 text-lg font-semibold">{{ $user->tenant?->name ?? '—' }}</div>
-            <div class="mt-1"><x-badge tone="brand">{{ $user->tenant?->status ?? 'n/a' }}</x-badge></div>
+            <div class="mt-2 text-lg font-semibold">{{ $tenant?->name ?? '—' }}</div>
+            <div class="mt-1"><x-badge tone="brand">{{ $tenant?->status ?? 'n/a' }}</x-badge></div>
         </x-card>
         <x-card>
             <div class="text-xs uppercase tracking-wide text-ink-500">Roles</div>

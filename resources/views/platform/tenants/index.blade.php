@@ -13,7 +13,7 @@
         <x-button href="{{ route('platform.tenants.create') }}">New tenant</x-button>
     </div>
 
-    <x-table :headers="['Tenant', 'Status', 'Plan', 'Users', 'Roles', '']">
+    <x-table :headers="['Tenant', 'Status', 'Plan', 'Database', 'URL', '']">
         @forelse ($tenants as $tenant)
             <tr>
                 <td class="px-4 py-3">
@@ -26,8 +26,12 @@
                     </x-badge>
                 </td>
                 <td class="px-4 py-3 text-ink-600">{{ $tenant->activeSubscription?->plan?->name ?? '—' }}</td>
-                <td class="px-4 py-3 text-ink-600">{{ $tenant->users_count }}</td>
-                <td class="px-4 py-3 text-ink-600">{{ $tenant->roles_count }}</td>
+                <td class="px-4 py-3 font-mono text-xs text-ink-600">{{ $tenant->database }}</td>
+                <td class="px-4 py-3">
+                    <a href="{{ $tenant->domainUrl('/login') }}" class="text-xs text-ink-700 underline" target="_blank" rel="noopener">
+                        {{ $tenant->slug }}.{{ config('tenancy.base_host') }}
+                    </a>
+                </td>
                 <td class="px-4 py-3 text-right">
                     <x-button href="{{ route('platform.tenants.show', $tenant) }}" variant="ghost">View</x-button>
                 </td>

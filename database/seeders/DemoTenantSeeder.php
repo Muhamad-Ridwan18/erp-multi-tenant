@@ -5,104 +5,79 @@ namespace Database\Seeders;
 use App\Models\Permission;
 use App\Models\Plan;
 use App\Models\Role;
-use App\Models\Subscription;
-use App\Models\Tenant;
 use App\Models\User;
-use App\Support\TenantContext;
+use App\Services\TenantProvisioner;
+use App\Support\TenantDatabaseManager;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class DemoTenantSeeder extends Seeder
 {
     public function run(): void
     {
-        $platform = User::query()->updateOrCreate(
-            ['email' => 'platform@daksa.test', 'tenant_id' => null],
+        User::query()->updateOrCreate(
+            ['email' => 'platform@daksa.test'],
             [
                 'name' => 'Platform Admin',
-                'password' => Hash::make('password'),
+                'password' => 'password',
                 'is_platform_admin' => true,
             ]
         );
 
-        $tenant = Tenant::query()->updateOrCreate(
-            ['slug' => 'demo-co'],
-            [
-                'name' => 'Demo Company',
-                'status' => 'active',
-                'trial_ends_at' => now()->addDays(14),
-            ]
-        );
-
         $plan = Plan::query()->where('code', 'business')->firstOrFail();
+        $provisioner = app(TenantProvisioner::class);
+        $databases = app(TenantDatabaseManager::class);
 
-        Subscription::query()->updateOrCreate(
-            [
-                'tenant_id' => $tenant->id,
-                'plan_id' => $plan->id,
-            ],
-            [
-                'status' => 'active',
-                'starts_at' => now(),
-                'ends_at' => now()->addYear(),
-            ]
-        );
+        $existing = \App\Models\Tenant::query()->where('slug', 'demo')->first();
+        if ($existing) {
+            $databases->dropDatabase($existing);
+            $existing->subscriptions()->delete();
+            $existing->delete();
+        }
 
-        TenantContext::set($tenant);
+        $tenant = $provisioner->provision([
+            'name' => 'Demo Company',
+            'slug' => 'demo',
+            'status' => 'active',
+            'plan_id' => $plan->id,
+            'admin_name' => 'Tenant Admin',
+            'admin_email' => 'admin@demo.test',
+            'admin_password' => 'password',
+        ]);
 
-        $adminRole = Role::query()->updateOrCreate(
-            ['tenant_id' => $tenant->id, 'name' => 'Admin'],
-            ['is_system' => true]
-        );
+        $databases->connect($tenant);
 
-        $salesRole = Role::query()->updateOrCreate(
-            ['tenant_id' => $tenant->id, 'name' => 'Sales'],
-            ['is_system' => false]
-        );
+        try {
+            $salesRole = Role::query()->updateOrCreate(
+                ['name' => 'Sales'],
+                ['is_system' => false]
+            );
 
-        $enabledModules = $tenant->enabledModuleCodes();
+            $enabledModules = $tenant->enabledModuleCodes();
+            $salesPermissionIds = Permission::query()
+                ->whereIn('module_code', ['partners', 'sales'])
+                ->whereIn('action', ['view', 'create', 'update', 'confirm', 'send'])
+                ->pluck('id')
+                ->all();
 
-        $allPermissionIds = Permission::query()
-            ->whereIn('module_code', $enabledModules)
-            ->pluck('id')
-            ->all();
+            $salesRole->syncPermissionsWithinPlan($salesPermissionIds, $enabledModules);
 
-        $adminRole->permissions()->sync($allPermissionIds);
+            $salesUser = User::query()->updateOrCreate(
+                ['email' => 'sales@demo.test'],
+                [
+                    'name' => 'Sales User',
+                    'password' => 'password',
+                ]
+            );
 
-        $salesPermissionIds = Permission::query()
-            ->whereIn('module_code', ['partners', 'sales'])
-            ->whereIn('action', ['view', 'create', 'update', 'confirm', 'send'])
-            ->pluck('id')
-            ->all();
-
-        $salesRole->syncPermissionsWithinPlan($salesPermissionIds, $enabledModules);
-
-        $tenantAdmin = User::query()->updateOrCreate(
-            ['email' => 'admin@demo.test', 'tenant_id' => $tenant->id],
-            [
-                'name' => 'Tenant Admin',
-                'password' => Hash::make('password'),
-                'is_platform_admin' => false,
-            ]
-        );
-
-        $salesUser = User::query()->updateOrCreate(
-            ['email' => 'sales@demo.test', 'tenant_id' => $tenant->id],
-            [
-                'name' => 'Sales User',
-                'password' => Hash::make('password'),
-                'is_platform_admin' => false,
-            ]
-        );
-
-        $tenantAdmin->roles()->sync([$adminRole->id]);
-        $salesUser->roles()->sync([$salesRole->id]);
-
-        TenantContext::clear();
+            $salesUser->roles()->sync([$salesRole->id]);
+        } finally {
+            $databases->disconnect();
+        }
 
         $this->command?->info('Demo accounts:');
-        $this->command?->line("  Platform: {$platform->email} / password");
-        $this->command?->line("  Tenant admin: {$tenantAdmin->email} / password");
-        $this->command?->line("  Sales user: {$salesUser->email} / password");
+        $this->command?->line('  Platform: platform@daksa.test / password (central domain)');
+        $this->command?->line('  Tenant admin: admin@demo.test / password (demo subdomain)');
+        $this->command?->line('  Sales user: sales@demo.test / password (demo subdomain)');
+        $this->command?->line('  Tenant URL: '.$tenant->domainUrl('/login'));
     }
 }

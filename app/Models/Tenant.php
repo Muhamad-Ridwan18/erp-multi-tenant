@@ -3,15 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Tenant extends Model
 {
+    protected $connection = 'central';
+
     protected $fillable = [
         'name',
         'slug',
+        'database',
         'status',
         'trial_ends_at',
     ];
@@ -21,16 +23,6 @@ class Tenant extends Model
         return [
             'trial_ends_at' => 'datetime',
         ];
-    }
-
-    public function users(): HasMany
-    {
-        return $this->hasMany(User::class);
-    }
-
-    public function roles(): HasMany
-    {
-        return $this->hasMany(Role::class);
     }
 
     public function subscriptions(): HasMany
@@ -52,5 +44,10 @@ class Tenant extends Model
         }
 
         return $subscription->plan->modules->pluck('code')->all();
+    }
+
+    public function domainUrl(string $path = '/'): string
+    {
+        return \App\Support\TenantContext::tenantUrl($this, $path);
     }
 }

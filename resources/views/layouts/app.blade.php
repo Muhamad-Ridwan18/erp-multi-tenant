@@ -10,25 +10,20 @@
     @auth
         @php
             $user = auth()->user();
-            $isPlatform = $user->isPlatformAdmin();
+            $isTenantHost = \App\Support\TenantContext::check();
         @endphp
 
         <div class="min-h-screen lg:grid lg:grid-cols-[16rem_1fr]">
             <aside class="border-b border-line bg-ink-950 text-ink-50 lg:border-b-0 lg:border-r lg:min-h-screen">
                 <div class="px-5 py-5">
-                    <a href="{{ $isPlatform ? route('platform.tenants.index') : route('dashboard') }}" class="block">
+                    <a href="{{ $isTenantHost ? route('dashboard') : route('platform.tenants.index') }}" class="block">
                         <div class="text-lg font-semibold tracking-tight text-white">Daksa</div>
                         <div class="text-xs text-ink-300">ERP multi-tenant</div>
                     </a>
                 </div>
 
                 <nav class="space-y-1 px-3 pb-6 text-sm">
-                    @if ($isPlatform)
-                        <a href="{{ route('platform.tenants.index') }}"
-                           class="block rounded-lg px-3 py-2 {{ request()->routeIs('platform.tenants.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
-                            Tenants
-                        </a>
-                    @else
+                    @if ($isTenantHost)
                         <a href="{{ route('dashboard') }}"
                            class="block rounded-lg px-3 py-2 {{ request()->routeIs('dashboard') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
                             Dashboard
@@ -39,15 +34,20 @@
                                 Roles
                             </a>
                         @endcan
+                    @else
+                        <a href="{{ route('platform.tenants.index') }}"
+                           class="block rounded-lg px-3 py-2 {{ request()->routeIs('platform.tenants.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
+                            Tenants
+                        </a>
                     @endif
                 </nav>
 
-                @unless ($isPlatform)
+                @if ($isTenantHost)
                     <div class="mt-auto hidden border-t border-ink-800 px-5 py-4 text-xs text-ink-300 lg:block">
-                        <div class="font-medium text-ink-100">{{ $user->tenant?->name }}</div>
-                        <div>{{ $user->tenant?->status }}</div>
+                        <div class="font-medium text-ink-100">{{ \App\Support\TenantContext::get()?->name }}</div>
+                        <div>{{ \App\Support\TenantContext::get()?->status }}</div>
                     </div>
-                @endunless
+                @endif
             </aside>
 
             <div class="min-w-0">

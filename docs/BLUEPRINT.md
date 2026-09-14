@@ -1,72 +1,107 @@
 # Daksa ERP — SaaS foundation blueprint
 
-Multi-tenant ERP foundation (separate from Aureus reference). This phase covers **tenants**, **plans/modules**, and **custom RBAC** only.
+Multi-tenant ERP foundation with **DB-per-tenant** and **subdomain** routing.
 
 ## Concepts
 
 ```
-Platform Admin  → manages tenants & plans
-Tenant          → company that rents the ERP
+Platform Admin  → central domain, central DB (tenants & plans)
+Tenant          → {slug}.base-host, own MySQL/SQLite database
 Plan            → which modules are enabled (Starter / Business)
-Role            → per-tenant, picks permissions from catalog
-Permission      → global catalog (sales.orders.view, …)
+Role            → inside tenant DB, picks permissions from catalog
+Permission      → seeded into each tenant DB from config
 ```
 
-- **Plan** = what the company paid for (modules on/off)
-- **Role** = who inside the company may do what (within enabled modules)
+## Domains
 
-## Tables
+| Host | App |
+|------|-----|
+| `erp.webyouneed.id` (central) | Platform console |
+| `{slug}.erp.webyouneed.id` | Tenant workspace |
 
-| Table | Purpose |
-|-------|---------|
-| `tenants` | Renting companies |
-| `plans` / `modules` / `plan_module` | Subscription packages |
-| `subscriptions` | Tenant ↔ plan |
-| `permissions` | Global catalog |
-| `roles` | Tenant-scoped roles |
-| `role_permission` / `role_user` | Assignments |
-| `users.tenant_id` | null = platform staff |
+DNS: point `*.erp.webyouneed.id` (and apex) to the server. App config:
 
-## Adding a permission
+```
+TENANCY_CENTRAL_DOMAINS=erp.webyouneed.id,www.erp.webyouneed.id
+TENANCY_BASE_HOST=erp.webyouneed.id
+TENANCY_DB_PREFIX=daksa_t_
+```
 
-1. Add entry in [`config/permissions.php`](../config/permissions.php)
-2. Run `php artisan db:seed --class=PermissionCatalogSeeder`
-3. Tenant admins can assign it only if the module is in their plan
+## Databases
 
-Naming: `{module}.{resource}.{action}`  
-Example: `sales.orders.confirm`
+| Connection | Contents |
+|------------|----------|
+| `central` | tenants, plans, modules, subscriptions, platform users |
+| `tenant` (runtime) | users, roles, permissions, pivots, cache/jobs |
+
+Creating a tenant **automatically**:
+
+1. Inserts central tenant row (`database` = `daksa_t_{slug}`)
+2. `CREATE DATABASE` (or SQLite file)
+3. Runs `database/migrations/tenant/*`
+4. Seeds permission catalog + optional admin user
 
 ## Auth checks
 
 ```php
 Gate::authorize('sales.orders.view');
-// or
-$request->user()->can('sales.orders.view');
 ```
 
-Platform admins bypass all permission checks.
+Platform admins (central only) bypass permission checks.
 
 ## Demo accounts (after migrate --seed)
 
-| Email | Password | Role |
-|-------|----------|------|
-| `platform@daksa.test` | `password` | Platform admin |
-| `admin@demo.test` | `password` | Tenant Admin (all plan permissions) |
-| `sales@demo.test` | `password` | Sales (limited) |
+| Email | Password | Where |
+|-------|----------|-------|
+| `platform@daksa.test` | `password` | Central domain |
+| `admin@demo.test` | `password` | `demo.{base_host}` |
+| `sales@demo.test` | `password` | `demo.{base_host}` |
+
+## Nginx (example)
+
+```nginx
+server {
+    listen 80;
+    listen 443 ssl;
+    server_name erp.webyouneed.id *.erp.webyouneed.id;
+
+    root /var/www/Daksa-Erp/public;
+    index index.php;
+
+    # ssl_certificate ... (wildcard recommended)
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+    }
+}
+```
+
+## Artisan
+
+```bash
+php artisan migrate              # central
+php artisan tenants:migrate      # all tenant DBs
+php artisan tenants:migrate --tenant=demo
+```
 
 ## Run locally
 
 ```bash
-cd d:\DEV\Daksa\daksa-erp
+# hosts or use *.localhost (Chrome resolves *.localhost)
 php artisan migrate:fresh --seed
-php artisan serve --port=8001
+php artisan serve --host=127.0.0.1 --port=8001
 ```
 
-Open http://127.0.0.1:8001/login
+- Platform: http://localhost:8001/login  
+- Tenant: http://demo.localhost:8001/login (set `TENANCY_BASE_HOST=localhost`)
 
-## Next (not in this phase)
+## Next
 
 - Billing / payment gateway
 - Realtime events
 - Sales / Inventory CRUD modules
-- Subdomain or path-based tenant routing

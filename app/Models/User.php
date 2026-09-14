@@ -6,18 +6,23 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
+use App\Support\TenantContext;
 
-#[Fillable(['tenant_id', 'name', 'email', 'password', 'is_platform_admin'])]
+#[Fillable(['name', 'email', 'password', 'is_platform_admin'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    public function getConnectionName(): ?string
+    {
+        return TenantContext::check() ? 'tenant' : 'central';
+    }
 
     protected function casts(): array
     {
@@ -28,11 +33,6 @@ class User extends Authenticatable
         ];
     }
 
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
-    }
-
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'role_user');
@@ -40,11 +40,19 @@ class User extends Authenticatable
 
     public function isPlatformAdmin(): bool
     {
-        return (bool) $this->is_platform_admin && $this->tenant_id === null;
+        if (TenantContext::check()) {
+            return false;
+        }
+
+        return (bool) ($this->attributes['is_platform_admin'] ?? false);
     }
 
     public function permissionNames(): Collection
     {
+        if ($this->isPlatformAdmin()) {
+            return collect();
+        }
+
         if ($this->relationLoaded('roles')) {
             return $this->roles
                 ->loadMissing('permissions')

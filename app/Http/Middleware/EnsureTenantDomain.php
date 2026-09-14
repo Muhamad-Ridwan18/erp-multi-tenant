@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Support\TenantContext;
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class EnsureTenantDomain
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        if (! TenantContext::check()) {
+            abort(404, 'Tenant routes are only available on a tenant subdomain.');
+        }
+
+        return $next($request);
+    }
+}
