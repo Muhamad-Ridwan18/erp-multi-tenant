@@ -3,7 +3,11 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Platform\TenantController;
+use App\Http\Controllers\Tenant\CustomerController;
+use App\Http\Controllers\Tenant\ProductController;
 use App\Http\Controllers\Tenant\RoleController;
+use App\Http\Controllers\Tenant\SalesOrderController;
+use App\Http\Controllers\Tenant\UserController;
 use App\Support\TenantContext;
 use Illuminate\Support\Facades\Route;
 
@@ -41,7 +45,42 @@ Route::middleware(['auth', 'central'])->prefix('platform')->name('platform.')->g
 Route::middleware(['auth', 'tenant.domain'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
+    Route::prefix('partners')->name('tenant.')->group(function () {
+        Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+        Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
+        Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
+        Route::get('/customers/{customer}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
+        Route::put('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
+        Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
+    });
+
+    Route::prefix('inventory')->name('tenant.')->group(function () {
+        Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+        Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+        Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+        Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
+        Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
+        Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+        Route::post('/products/{product}/adjust', [ProductController::class, 'adjust'])->name('products.adjust');
+    });
+
+    Route::prefix('sales')->name('tenant.')->group(function () {
+        Route::get('/orders', [SalesOrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/create', [SalesOrderController::class, 'create'])->name('orders.create');
+        Route::post('/orders', [SalesOrderController::class, 'store'])->name('orders.store');
+        Route::get('/orders/{order}', [SalesOrderController::class, 'show'])->name('orders.show');
+        Route::post('/orders/{order}/confirm', [SalesOrderController::class, 'confirm'])->name('orders.confirm');
+        Route::delete('/orders/{order}', [SalesOrderController::class, 'destroy'])->name('orders.destroy');
+    });
+
     Route::prefix('settings')->name('tenant.')->group(function () {
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
         Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
         Route::get('/roles/create', [RoleController::class, 'create'])->name('roles.create');
         Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');

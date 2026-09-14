@@ -43,3 +43,26 @@ document.addEventListener('input', (event) => {
 
     slugTarget.dataset.slugTouched = 'true';
 });
+
+document.addEventListener('click', (event) => {
+    if (event.target.closest('[data-add-line]')) {
+        const lines = document.querySelector('[data-lines]');
+        const template = document.querySelector('#line-template');
+        if (!lines || !template) {
+            return;
+        }
+
+        const index = lines.querySelectorAll('[data-line]').length;
+        const html = template.innerHTML.replaceAll('__INDEX__', String(index));
+        lines.insertAdjacentHTML('beforeend', html);
+    }
+
+    const remove = event.target.closest('[data-remove-line]');
+    if (remove) {
+        const line = remove.closest('[data-line]');
+        const lines = document.querySelector('[data-lines]');
+        if (line && lines && lines.querySelectorAll('[data-line]').length > 1) {
+            line.remove();
+        }
+    }
+});

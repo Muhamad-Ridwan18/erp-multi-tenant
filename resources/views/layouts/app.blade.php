@@ -28,6 +28,30 @@
                            class="block rounded-lg px-3 py-2 {{ request()->routeIs('dashboard') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
                             Dashboard
                         </a>
+                        @can('partners.customers.view')
+                            <a href="{{ route('tenant.customers.index') }}"
+                               class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.customers.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
+                                Customers
+                            </a>
+                        @endcan
+                        @can('inventory.products.view')
+                            <a href="{{ route('tenant.products.index') }}"
+                               class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.products.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
+                                Products
+                            </a>
+                        @endcan
+                        @can('sales.orders.view')
+                            <a href="{{ route('tenant.orders.index') }}"
+                               class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.orders.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
+                                Sales orders
+                            </a>
+                        @endcan
+                        @can('settings.users.view')
+                            <a href="{{ route('tenant.users.index') }}"
+                               class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.users.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
+                                Users
+                            </a>
+                        @endcan
                         @can('settings.roles.view')
                             <a href="{{ route('tenant.roles.index') }}"
                                class="block rounded-lg px-3 py-2 {{ request()->routeIs('tenant.roles.*') ? 'bg-ink-800 text-white' : 'text-ink-200 hover:bg-ink-900 hover:text-white' }}">
