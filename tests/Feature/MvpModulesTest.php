@@ -10,13 +10,13 @@ use App\Models\Role;
 use App\Models\SalesOrder;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Models\Warehouse;
+use App\Services\StockService;
 use App\Services\TenantProvisioner;
-use App\Support\TenantContext;
 use App\Support\TenantDatabaseManager;
 use Database\Seeders\ModuleSeeder;
 use Database\Seeders\PlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 class MvpModulesTest extends TestCase
@@ -30,8 +30,6 @@ class MvpModulesTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        File::ensureDirectoryExists(database_path('tenants'));
 
         $this->seed([
             ModuleSeeder::class,
@@ -53,18 +51,6 @@ class MvpModulesTest extends TestCase
         app(TenantDatabaseManager::class)->disconnect();
     }
 
-    protected function tearDown(): void
-    {
-        TenantContext::clear();
-        app(TenantDatabaseManager::class)->disconnect();
-
-        foreach (File::glob(database_path('tenants/*.sqlite')) as $file) {
-            File::delete($file);
-        }
-
-        parent::tearDown();
-    }
-
     protected function onTenantHost(): static
     {
         return $this->withServerVariables([
@@ -73,7 +59,7 @@ class MvpModulesTest extends TestCase
         ]);
     }
 
-    public function test_admin_can_create_customer_product_and_confirm_order(): void
+    public function test_admin_can_create_customer_product_confirm_order_and_deliver(): void
     {
         $this->onTenantHost()
             ->actingAs($this->admin)
@@ -126,17 +112,30 @@ class MvpModulesTest extends TestCase
         $order->refresh();
         $product = Product::query()->findOrFail($productId);
         $this->assertSame('confirmed', $order->status);
+        $this->assertSame('no', $order->delivery_status);
+        $this->assertSame(10, $product->stock_qty, 'Confirming reserves nothing; stock leaves on delivery.');
+        app(TenantDatabaseManager::class)->disconnect();
+
+        $this->onTenantHost()
+            ->actingAs($this->admin)
+            ->post('http://acme.localhost/sales/orders/'.$order->id.'/deliver')
+            ->assertRedirect();
+
+        app(TenantDatabaseManager::class)->connect($this->tenant);
+        $order->refresh();
+        $product->refresh();
+        $this->assertSame('full', $order->delivery_status);
         $this->assertSame(7, $product->stock_qty);
         $this->assertDatabaseHas('stock_movements', [
             'product_id' => $productId,
-            'type' => 'sale',
+            'type' => 'delivery',
             'quantity' => -3,
             'balance_after' => 7,
         ], 'tenant');
         app(TenantDatabaseManager::class)->disconnect();
     }
 
-    public function test_confirm_fails_when_stock_insufficient(): void
+    public function test_delivery_fails_when_stock_insufficient(): void
     {
         app(TenantDatabaseManager::class)->connect($this->tenant);
 
@@ -146,14 +145,17 @@ class MvpModulesTest extends TestCase
             'name' => 'Low stock',
             'unit' => 'pcs',
             'price' => 1000,
-            'stock_qty' => 1,
+            'stock_qty' => 0,
             'is_active' => true,
         ]);
+        app(StockService::class)->adjust($product, 1, $this->admin, 'Opening stock');
+
         $order = SalesOrder::query()->create([
             'number' => 'SO-TEST-0001',
             'customer_id' => $customer->id,
-            'status' => 'draft',
+            'status' => 'confirmed',
             'subtotal' => 5000,
+            'confirmed_at' => now(),
             'created_by' => $this->admin->id,
         ]);
         $order->items()->create([
@@ -168,14 +170,57 @@ class MvpModulesTest extends TestCase
         $this->onTenantHost()
             ->actingAs($this->admin)
             ->from('http://acme.localhost/sales/orders/'.$order->id)
-            ->post('http://acme.localhost/sales/orders/'.$order->id.'/confirm')
+            ->post('http://acme.localhost/sales/orders/'.$order->id.'/deliver')
             ->assertRedirect()
             ->assertSessionHasErrors('order');
 
         app(TenantDatabaseManager::class)->connect($this->tenant);
-        $this->assertSame('draft', $order->fresh()->status);
+        $this->assertSame('no', $order->fresh()->delivery_status);
         $this->assertSame(1, $product->fresh()->stock_qty);
         app(TenantDatabaseManager::class)->disconnect();
+    }
+
+    public function test_warehouse_creation_adds_a_stock_location(): void
+    {
+        $this->onTenantHost()
+            ->actingAs($this->admin)
+            ->post('http://acme.localhost/inventory/warehouses', [
+                'code' => 'WH02',
+                'name' => 'Second Warehouse',
+                'is_active' => '1',
+            ])
+            ->assertRedirect(route('tenant.warehouses.index'));
+
+        app(TenantDatabaseManager::class)->connect($this->tenant);
+        $warehouse = Warehouse::query()->where('code', 'WH02')->firstOrFail();
+        $this->assertDatabaseHas('locations', [
+            'warehouse_id' => $warehouse->id,
+            'code' => 'STOCK',
+            'type' => 'internal',
+        ], 'tenant');
+        app(TenantDatabaseManager::class)->disconnect();
+    }
+
+    public function test_new_inventory_and_finance_pages_render(): void
+    {
+        $pages = [
+            'inventory/products/create',
+            'inventory/warehouses',
+            'inventory/warehouses/create',
+            'inventory/operations',
+            'inventory/operations?type=receipt',
+            'finance/invoices/create',
+            'finance/bills/create',
+            'finance/taxes',
+            'settings/categories',
+        ];
+
+        foreach ($pages as $page) {
+            $this->onTenantHost()
+                ->actingAs($this->admin)
+                ->get('http://acme.localhost/'.$page)
+                ->assertOk();
+        }
     }
 
     public function test_user_without_permission_cannot_view_customers(): void

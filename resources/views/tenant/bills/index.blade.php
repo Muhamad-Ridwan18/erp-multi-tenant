@@ -4,6 +4,15 @@
 @section('page-title', 'Vendor bills')
 @section('page-subtitle', 'Finance')
 
+@section('page-actions')
+    @can('finance.bills.create')
+        <a href="{{ route('tenant.bills.create') }}" class="btn btn-primary">
+            <i class="ti ti-plus me-1"></i>
+            New bill
+        </a>
+    @endcan
+@endsection
+
 @section('content')
     <x-table :headers="['Number', 'Vendor', 'Status', 'Total', 'Due', '']" title="Bills">
         @forelse ($bills as $bill)

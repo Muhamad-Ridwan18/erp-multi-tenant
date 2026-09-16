@@ -4,12 +4,16 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\ProductCategory;
+use App\Models\Uom;
 use App\Services\StockService;
+use App\Support\TenantMasterData;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use InvalidArgumentException;
+use Throwable;
 
 class ProductController extends Controller
 {
@@ -26,27 +30,48 @@ class ProductController extends Controller
     {
         abort_unless($request->user()->can('inventory.products.create'), 403);
 
-        return view('tenant.products.create');
+        $categories = TenantMasterData::productCategories();
+        $uoms = TenantMasterData::uoms();
+
+        return view('tenant.products.create', compact('categories', 'uoms'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, StockService $stock): RedirectResponse
     {
         abort_unless($request->user()->can('inventory.products.create'), 403);
 
         $data = $request->validate([
             'sku' => ['required', 'string', 'max:50', Rule::unique(Product::class, 'sku')],
             'name' => ['required', 'string', 'max:150'],
+            'type' => ['nullable', Rule::in(['goods', 'service'])],
+            'barcode' => ['nullable', 'string', 'max:100'],
+            'product_category_id' => ['nullable', Rule::exists(ProductCategory::class, 'id')],
             'description' => ['nullable', 'string'],
-            'unit' => ['required', 'string', 'max:20'],
+            'unit' => ['nullable', 'string', 'max:20'],
+            'uom_id' => ['nullable', Rule::exists(Uom::class, 'id')],
+            'purchase_uom_id' => ['nullable', Rule::exists(Uom::class, 'id')],
             'price' => ['required', 'integer', 'min:0'],
+            'cost' => ['nullable', 'integer', 'min:0'],
+            'weight' => ['nullable', 'numeric', 'min:0'],
+            'volume' => ['nullable', 'numeric', 'min:0'],
             'stock_qty' => ['required', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
-        Product::query()->create([
+        $openingStock = (int) $data['stock_qty'];
+
+        $product = Product::query()->create([
             ...$data,
+            'type' => $data['type'] ?? 'goods',
+            'unit' => ($data['unit'] ?? null) ?: 'pcs',
+            'cost' => $data['cost'] ?? 0,
+            'stock_qty' => 0,
             'is_active' => $request->boolean('is_active', true),
         ]);
+
+        if ($openingStock > 0) {
+            $this->applyOpeningStock($product, $openingStock, $request, $stock);
+        }
 
         return redirect()
             ->route('tenant.products.index')
@@ -58,8 +83,10 @@ class ProductController extends Controller
         abort_unless($request->user()->can('inventory.products.update'), 403);
 
         $product->load(['stockMovements' => fn ($q) => $q->latest()->limit(20)]);
+        $categories = TenantMasterData::productCategories();
+        $uoms = TenantMasterData::uoms();
 
-        return view('tenant.products.edit', compact('product'));
+        return view('tenant.products.edit', compact('product', 'categories', 'uoms'));
     }
 
     public function update(Request $request, Product $product): RedirectResponse
@@ -69,14 +96,25 @@ class ProductController extends Controller
         $data = $request->validate([
             'sku' => ['required', 'string', 'max:50', Rule::unique(Product::class, 'sku')->ignore($product->id)],
             'name' => ['required', 'string', 'max:150'],
+            'type' => ['nullable', Rule::in(['goods', 'service'])],
+            'barcode' => ['nullable', 'string', 'max:100'],
+            'product_category_id' => ['nullable', Rule::exists(ProductCategory::class, 'id')],
             'description' => ['nullable', 'string'],
-            'unit' => ['required', 'string', 'max:20'],
+            'unit' => ['nullable', 'string', 'max:20'],
+            'uom_id' => ['nullable', Rule::exists(Uom::class, 'id')],
+            'purchase_uom_id' => ['nullable', Rule::exists(Uom::class, 'id')],
             'price' => ['required', 'integer', 'min:0'],
+            'cost' => ['nullable', 'integer', 'min:0'],
+            'weight' => ['nullable', 'numeric', 'min:0'],
+            'volume' => ['nullable', 'numeric', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
         $product->update([
             ...$data,
+            'type' => $data['type'] ?? $product->type ?? 'goods',
+            'unit' => ($data['unit'] ?? null) ?: ($product->unit ?: 'pcs'),
+            'cost' => $data['cost'] ?? 0,
             'is_active' => $request->boolean('is_active'),
         ]);
 
@@ -116,5 +154,18 @@ class ProductController extends Controller
         }
 
         return back()->with('status', 'Stock adjusted.');
+    }
+
+    /**
+     * Put opening stock on the default internal location. Tenants without an
+     * inventory location set up fall back to the cached quantity on the product.
+     */
+    protected function applyOpeningStock(Product $product, int $quantity, Request $request, StockService $stock): void
+    {
+        try {
+            $stock->adjust($product, $quantity, $request->user(), 'Opening stock');
+        } catch (Throwable) {
+            $product->update(['stock_qty' => $quantity]);
+        }
     }
 }

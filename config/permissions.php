@@ -66,6 +66,23 @@ return [
         ['module' => 'inventory', 'resource' => 'products', 'action' => 'delete', 'description' => 'Delete products'],
         ['module' => 'inventory', 'resource' => 'stock', 'action' => 'view', 'description' => 'View stock levels'],
         ['module' => 'inventory', 'resource' => 'stock', 'action' => 'adjust', 'description' => 'Adjust stock'],
+        ['module' => 'inventory', 'resource' => 'warehouses', 'action' => 'view', 'description' => 'View warehouses'],
+        ['module' => 'inventory', 'resource' => 'warehouses', 'action' => 'manage', 'description' => 'Manage warehouses'],
+        ['module' => 'inventory', 'resource' => 'operations', 'action' => 'view', 'description' => 'View stock operations'],
+        ['module' => 'inventory', 'resource' => 'operations', 'action' => 'create', 'description' => 'Create stock operations'],
+        ['module' => 'inventory', 'resource' => 'operations', 'action' => 'validate', 'description' => 'Validate stock operations'],
+
+        // Finance config
+        ['module' => 'finance', 'resource' => 'taxes', 'action' => 'view', 'description' => 'View taxes'],
+        ['module' => 'finance', 'resource' => 'taxes', 'action' => 'manage', 'description' => 'Manage taxes'],
+        ['module' => 'finance', 'resource' => 'journals', 'action' => 'view', 'description' => 'View journals'],
+        ['module' => 'finance', 'resource' => 'accounts', 'action' => 'view', 'description' => 'View chart of accounts'],
+
+        // Settings masters
+        ['module' => 'settings', 'resource' => 'uoms', 'action' => 'view', 'description' => 'View units of measure'],
+        ['module' => 'settings', 'resource' => 'uoms', 'action' => 'manage', 'description' => 'Manage units of measure'],
+        ['module' => 'settings', 'resource' => 'categories', 'action' => 'manage', 'description' => 'Manage product categories'],
+        ['module' => 'settings', 'resource' => 'payment_terms', 'action' => 'manage', 'description' => 'Manage payment terms'],
 
         // Settings (always useful for tenant admins)
         ['module' => 'settings', 'resource' => 'roles', 'action' => 'view', 'description' => 'View roles'],

@@ -3,12 +3,12 @@
 namespace App\Services;
 
 use App\Models\Permission;
-use App\Models\Plan;
 use App\Models\Role;
 use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\TenantDatabaseManager;
+use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\PermissionCatalogSeeder;
 use Illuminate\Support\Facades\DB;
 
@@ -46,6 +46,7 @@ class TenantProvisioner
 
         try {
             (new PermissionCatalogSeeder)->run();
+            (new MasterDataSeeder)->run();
 
             if (! empty($data['admin_email'])) {
                 $this->createAdmin(

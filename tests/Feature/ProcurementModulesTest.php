@@ -10,13 +10,12 @@ use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Vendor;
+use App\Services\StockService;
 use App\Services\TenantProvisioner;
-use App\Support\TenantContext;
 use App\Support\TenantDatabaseManager;
 use Database\Seeders\ModuleSeeder;
 use Database\Seeders\PlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 class ProcurementModulesTest extends TestCase
@@ -30,8 +29,6 @@ class ProcurementModulesTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        File::ensureDirectoryExists(database_path('tenants'));
 
         $this->seed([
             ModuleSeeder::class,
@@ -51,18 +48,6 @@ class ProcurementModulesTest extends TestCase
         app(TenantDatabaseManager::class)->connect($this->tenant);
         $this->admin = User::query()->where('email', 'admin@acme.test')->firstOrFail();
         app(TenantDatabaseManager::class)->disconnect();
-    }
-
-    protected function tearDown(): void
-    {
-        TenantContext::clear();
-        app(TenantDatabaseManager::class)->disconnect();
-
-        foreach (File::glob(database_path('tenants/*.sqlite')) as $file) {
-            File::delete($file);
-        }
-
-        parent::tearDown();
     }
 
     protected function onTenantHost(): static
@@ -89,9 +74,10 @@ class ProcurementModulesTest extends TestCase
             'name' => 'Raw Material',
             'unit' => 'pcs',
             'price' => 5000,
-            'stock_qty' => 2,
+            'stock_qty' => 0,
             'is_active' => true,
         ]);
+        app(StockService::class)->adjust($product, 2, $this->admin, 'Opening stock');
         $vendorId = Vendor::query()->where('name', 'PT Supplier')->value('id');
         app(TenantDatabaseManager::class)->disconnect();
 
@@ -124,13 +110,60 @@ class ProcurementModulesTest extends TestCase
         $order->refresh();
         $product->refresh();
         $this->assertSame('received', $order->status);
+        $this->assertSame('full', $order->receipt_status);
         $this->assertSame(7, $product->stock_qty);
         $this->assertDatabaseHas('stock_movements', [
             'product_id' => $product->id,
-            'type' => 'purchase',
+            'type' => 'receipt',
             'quantity' => 5,
             'balance_after' => 7,
         ], 'tenant');
+        app(TenantDatabaseManager::class)->disconnect();
+    }
+
+    public function test_partial_receipt_only_takes_in_the_submitted_quantities(): void
+    {
+        app(TenantDatabaseManager::class)->connect($this->tenant);
+
+        $vendor = Vendor::query()->create(['name' => 'Partial Supplier']);
+        $product = Product::query()->create([
+            'sku' => 'PART-1',
+            'name' => 'Part',
+            'unit' => 'pcs',
+            'price' => 1000,
+            'stock_qty' => 0,
+            'is_active' => true,
+        ]);
+        $order = PurchaseOrder::query()->create([
+            'number' => 'PO-PARTIAL-1',
+            'vendor_id' => $vendor->id,
+            'status' => 'confirmed',
+            'subtotal' => 5000,
+            'confirmed_at' => now(),
+            'created_by' => $this->admin->id,
+        ]);
+        $order->items()->create([
+            'product_id' => $product->id,
+            'quantity' => 5,
+            'unit_price' => 1000,
+            'line_total' => 5000,
+        ]);
+
+        app(TenantDatabaseManager::class)->disconnect();
+
+        $this->onTenantHost()
+            ->actingAs($this->admin)
+            ->post('http://acme.localhost/procurement/purchases/'.$order->id.'/receive', [
+                'receive_items' => [$product->id => 2],
+            ])
+            ->assertRedirect();
+
+        app(TenantDatabaseManager::class)->connect($this->tenant);
+        $order->refresh();
+        $this->assertSame('partial', $order->receipt_status);
+        $this->assertSame('confirmed', $order->status);
+        $this->assertSame(2, $order->items()->first()->qty_received);
+        $this->assertSame(2, $product->fresh()->stock_qty);
         app(TenantDatabaseManager::class)->disconnect();
     }
 

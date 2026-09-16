@@ -7,11 +7,9 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Services\TenantProvisioner;
 use App\Support\TenantDatabaseManager;
-use App\Support\TenantContext;
 use Database\Seeders\ModuleSeeder;
 use Database\Seeders\PlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 class PlatformTenantTest extends TestCase
@@ -24,8 +22,6 @@ class PlatformTenantTest extends TestCase
     {
         parent::setUp();
 
-        File::ensureDirectoryExists(database_path('tenants'));
-
         $this->seed([
             ModuleSeeder::class,
             PlanSeeder::class,
@@ -34,18 +30,6 @@ class PlatformTenantTest extends TestCase
         $this->platform = User::factory()->platformAdmin()->create([
             'email' => 'platform@daksa.test',
         ]);
-    }
-
-    protected function tearDown(): void
-    {
-        TenantContext::clear();
-        app(TenantDatabaseManager::class)->disconnect();
-
-        foreach (File::glob(database_path('tenants/*.sqlite')) as $file) {
-            File::delete($file);
-        }
-
-        parent::tearDown();
     }
 
     public function test_non_platform_user_cannot_access_tenants_on_central(): void
@@ -78,7 +62,7 @@ class PlatformTenantTest extends TestCase
 
         $tenant = Tenant::query()->where('slug', 'new-co')->first();
         $this->assertNotNull($tenant);
-        $this->assertSame('daksa_t_new-co', $tenant->database);
+        $this->assertSame(config('tenancy.database_prefix').'new-co', $tenant->database);
         $response->assertRedirect(route('platform.tenants.show', $tenant));
 
         $this->assertTrue(app(TenantDatabaseManager::class)->databaseExists($tenant));

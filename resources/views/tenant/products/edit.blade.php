@@ -25,14 +25,66 @@
                     <div class="col-md-8">
                         <x-card>
                             <x-input label="Name" name="name" value="{{ old('name', $product->name) }}" required class="fs-4 fw-medium" />
-                            <x-input label="SKU" name="sku" value="{{ old('sku', $product->sku) }}" required />
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <x-input label="SKU" name="sku" value="{{ old('sku', $product->sku) }}" required />
+                                </div>
+                                <div class="col-md-6">
+                                    <x-input label="Barcode" name="barcode" value="{{ old('barcode', $product->barcode) }}" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <x-select label="Type" name="type" :searchable="false">
+                                        <option value="goods" @selected(old('type', $product->type ?? 'goods') === 'goods')>Goods</option>
+                                        <option value="service" @selected(old('type', $product->type) === 'service')>Service</option>
+                                    </x-select>
+                                </div>
+                                <div class="col-md-6">
+                                    <x-select label="Category" name="product_category_id" placeholder="Search category…">
+                                        <option value="">No category</option>
+                                        @foreach ($categories as $category)
+                                            <option value="{{ $category->id }}" @selected((string) old('product_category_id', $product->product_category_id) === (string) $category->id)>
+                                                {{ $category->name }}
+                                            </option>
+                                        @endforeach
+                                    </x-select>
+                                </div>
+                            </div>
                             <x-textarea label="Description" name="description" rows="4">{{ old('description', $product->description) }}</x-textarea>
                         </x-card>
                     </div>
                     <div class="col-md-4">
                         <x-card>
-                            <x-input label="Unit" name="unit" value="{{ old('unit', $product->unit) }}" required />
-                            <x-input label="Sales price (Rp)" name="price" type="number" min="0" value="{{ old('price', $product->price) }}" required />
+                            <x-select label="Sales UoM" name="uom_id" placeholder="Search unit…">
+                                <option value="">Default</option>
+                                @foreach ($uoms as $uom)
+                                    <option value="{{ $uom->id }}" @selected((string) old('uom_id', $product->uom_id) === (string) $uom->id)>{{ $uom->name }} ({{ $uom->code }})</option>
+                                @endforeach
+                            </x-select>
+                            <x-select label="Purchase UoM" name="purchase_uom_id" placeholder="Search unit…">
+                                <option value="">Default</option>
+                                @foreach ($uoms as $uom)
+                                    <option value="{{ $uom->id }}" @selected((string) old('purchase_uom_id', $product->purchase_uom_id) === (string) $uom->id)>{{ $uom->name }} ({{ $uom->code }})</option>
+                                @endforeach
+                            </x-select>
+                            <x-input label="Unit label" name="unit" value="{{ old('unit', $product->unit) }}" />
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <x-input label="Sales price (Rp)" name="price" type="number" min="0" value="{{ old('price', $product->price) }}" required />
+                                </div>
+                                <div class="col-md-6">
+                                    <x-input label="Cost (Rp)" name="cost" type="number" min="0" value="{{ old('cost', $product->cost) }}" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <x-input label="Weight (kg)" name="weight" type="number" step="0.001" min="0" value="{{ old('weight', $product->weight) }}" />
+                                </div>
+                                <div class="col-md-6">
+                                    <x-input label="Volume (m³)" name="volume" type="number" step="0.001" min="0" value="{{ old('volume', $product->volume) }}" />
+                                </div>
+                            </div>
                             <div class="mb-3">
                                 <label class="form-check">
                                     <input type="checkbox" name="is_active" value="1" class="form-check-input" @checked(old('is_active', $product->is_active))>

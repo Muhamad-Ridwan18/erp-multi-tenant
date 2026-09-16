@@ -3,13 +3,21 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\Journal;
+use App\Models\PaymentTerm;
+use App\Models\Product;
 use App\Models\SalesOrder;
 use App\Services\FinanceService;
+use App\Support\DocumentLineDescriber;
+use App\Support\TenantMasterData;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use InvalidArgumentException;
+use Throwable;
 
 class InvoiceController extends Controller
 {
@@ -23,6 +31,54 @@ class InvoiceController extends Controller
             ->get();
 
         return view('tenant.invoices.index', compact('invoices'));
+    }
+
+    public function create(Request $request): View
+    {
+        abort_unless($request->user()->can('finance.invoices.create'), 403);
+
+        $customers = Customer::query()->orderBy('name')->get();
+        $products = Product::query()->where('is_active', true)->orderBy('name')->get();
+        $taxes = TenantMasterData::taxes();
+        $paymentTerms = TenantMasterData::paymentTerms();
+        $journals = TenantMasterData::journals();
+
+        return view('tenant.invoices.create', compact('customers', 'products', 'taxes', 'paymentTerms', 'journals'));
+    }
+
+    public function store(Request $request, FinanceService $finance): RedirectResponse
+    {
+        abort_unless($request->user()->can('finance.invoices.create'), 403);
+
+        $data = $request->validate([
+            'customer_id' => ['required', Rule::exists(Customer::class, 'id')],
+            'invoice_date' => ['nullable', 'date'],
+            'due_date' => ['nullable', 'date'],
+            'payment_term_id' => ['nullable', Rule::exists(PaymentTerm::class, 'id')],
+            'journal_id' => ['nullable', Rule::exists(Journal::class, 'id')],
+            'reference' => ['nullable', 'string', 'max:100'],
+            'notes' => ['nullable', 'string'],
+            'terms' => ['nullable', 'string'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['nullable', Rule::exists(Product::class, 'id')],
+            'items.*.description' => ['nullable', 'string', 'max:255'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.unit_price' => ['required', 'integer', 'min:0'],
+            'items.*.discount_percent' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'items.*.tax_percent' => ['nullable', 'integer', 'min:0', 'max:100'],
+        ]);
+
+        $data['items'] = DocumentLineDescriber::describe($data['items']);
+
+        try {
+            $invoice = $finance->createManualInvoice($data, $request->user());
+        } catch (Throwable $e) {
+            return back()->withInput()->withErrors(['items' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('tenant.invoices.show', $invoice)
+            ->with('status', 'Invoice created as draft.');
     }
 
     public function show(Request $request, Invoice $invoice): View
@@ -54,7 +110,7 @@ class InvoiceController extends Controller
         abort_unless($request->user()->can('finance.invoices.post'), 403);
 
         try {
-            $finance->postInvoice($invoice);
+            $finance->postInvoice($invoice, $request->user());
         } catch (InvalidArgumentException $e) {
             return back()->withErrors(['invoice' => $e->getMessage()]);
         }

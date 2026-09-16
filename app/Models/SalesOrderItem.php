@@ -12,10 +12,15 @@ class SalesOrderItem extends Model
     protected $fillable = [
         'sales_order_id',
         'product_id',
+        'uom_id',
         'quantity',
+        'qty_delivered',
+        'qty_invoiced',
+        'customer_lead',
         'unit_price',
         'discount_percent',
         'tax_percent',
+        'tax_id',
         'line_total',
     ];
 
@@ -23,6 +28,9 @@ class SalesOrderItem extends Model
     {
         return [
             'quantity' => 'integer',
+            'qty_delivered' => 'integer',
+            'qty_invoiced' => 'integer',
+            'customer_lead' => 'integer',
             'unit_price' => 'integer',
             'discount_percent' => 'integer',
             'tax_percent' => 'integer',
@@ -38,5 +46,15 @@ class SalesOrderItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function uom(): BelongsTo
+    {
+        return $this->belongsTo(Uom::class);
+    }
+
+    public function tax(): BelongsTo
+    {
+        return $this->belongsTo(Tax::class);
     }
 }

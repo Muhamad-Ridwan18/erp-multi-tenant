@@ -14,9 +14,12 @@ class Payment extends Model
         'direction',
         'invoice_id',
         'bill_id',
+        'journal_id',
+        'currency_id',
         'amount',
         'paid_at',
         'notes',
+        'memo',
         'created_by',
     ];
 
@@ -36,6 +39,16 @@ class Payment extends Model
     public function bill(): BelongsTo
     {
         return $this->belongsTo(Bill::class);
+    }
+
+    public function journal(): BelongsTo
+    {
+        return $this->belongsTo(Journal::class);
+    }
+
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class);
     }
 
     public function creator(): BelongsTo

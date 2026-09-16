@@ -15,12 +15,10 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Services\TenantProvisioner;
-use App\Support\TenantContext;
 use App\Support\TenantDatabaseManager;
 use Database\Seeders\ModuleSeeder;
 use Database\Seeders\PlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 class FinanceModulesTest extends TestCase
@@ -34,8 +32,6 @@ class FinanceModulesTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        File::ensureDirectoryExists(database_path('tenants'));
 
         $this->seed([
             ModuleSeeder::class,
@@ -55,18 +51,6 @@ class FinanceModulesTest extends TestCase
         app(TenantDatabaseManager::class)->connect($this->tenant);
         $this->admin = User::query()->where('email', 'admin@acme.test')->firstOrFail();
         app(TenantDatabaseManager::class)->disconnect();
-    }
-
-    protected function tearDown(): void
-    {
-        TenantContext::clear();
-        app(TenantDatabaseManager::class)->disconnect();
-
-        foreach (File::glob(database_path('tenants/*.sqlite')) as $file) {
-            File::delete($file);
-        }
-
-        parent::tearDown();
     }
 
     protected function onTenantHost(): static
@@ -203,6 +187,43 @@ class FinanceModulesTest extends TestCase
             'direction' => 'outgoing',
             'amount' => 15000,
         ], 'tenant');
+        app(TenantDatabaseManager::class)->disconnect();
+    }
+
+    public function test_manual_invoice_can_be_created_without_a_sales_order(): void
+    {
+        app(TenantDatabaseManager::class)->connect($this->tenant);
+
+        $customer = Customer::query()->create(['name' => 'Walk-in']);
+        $product = Product::query()->create([
+            'sku' => 'M1',
+            'name' => 'Service fee',
+            'unit' => 'pcs',
+            'price' => 25000,
+            'stock_qty' => 0,
+            'is_active' => true,
+        ]);
+
+        app(TenantDatabaseManager::class)->disconnect();
+
+        $this->onTenantHost()
+            ->actingAs($this->admin)
+            ->post('http://acme.localhost/finance/invoices', [
+                'customer_id' => $customer->id,
+                'invoice_date' => now()->toDateString(),
+                'items' => [
+                    ['product_id' => $product->id, 'quantity' => 2, 'unit_price' => 25000, 'discount_percent' => 0, 'tax_percent' => 10],
+                ],
+            ])
+            ->assertRedirect();
+
+        app(TenantDatabaseManager::class)->connect($this->tenant);
+        $invoice = Invoice::query()->where('customer_id', $customer->id)->firstOrFail();
+        $this->assertNull($invoice->sales_order_id);
+        $this->assertSame('draft', $invoice->status);
+        $this->assertSame(50000, $invoice->subtotal);
+        $this->assertSame(55000, $invoice->grand_total);
+        $this->assertSame('Service fee', $invoice->items()->value('description'));
         app(TenantDatabaseManager::class)->disconnect();
     }
 

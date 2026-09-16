@@ -4,10 +4,14 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\PaymentTerm;
 use App\Models\Product;
 use App\Models\SalesOrder;
+use App\Models\User;
+use App\Models\Warehouse;
 use App\Services\SalesOrderService;
 use App\Support\DocumentLineCalculator;
+use App\Support\TenantMasterData;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -37,8 +41,12 @@ class SalesOrderController extends Controller
 
         $customers = Customer::query()->orderBy('name')->get();
         $products = Product::query()->where('is_active', true)->orderBy('name')->get();
+        $paymentTerms = TenantMasterData::paymentTerms();
+        $warehouses = TenantMasterData::warehouses();
+        $taxes = TenantMasterData::taxes();
+        $uoms = TenantMasterData::uoms();
 
-        return view('tenant.orders.create', compact('customers', 'products'));
+        return view('tenant.orders.create', compact('customers', 'products', 'paymentTerms', 'warehouses', 'taxes', 'uoms'));
     }
 
     public function store(Request $request, SalesOrderService $orders): RedirectResponse
@@ -47,6 +55,14 @@ class SalesOrderController extends Controller
 
         $data = $request->validate([
             'customer_id' => ['required', Rule::exists(Customer::class, 'id')],
+            'kind' => ['nullable', Rule::in(['quotation', 'order'])],
+            'payment_term_id' => ['nullable', Rule::exists(PaymentTerm::class, 'id')],
+            'warehouse_id' => ['nullable', Rule::exists(Warehouse::class, 'id')],
+            'validity_date' => ['nullable', 'date'],
+            'ordered_at' => ['nullable', 'date'],
+            'commitment_date' => ['nullable', 'date'],
+            'client_order_ref' => ['nullable', 'string', 'max:100'],
+            'salesperson_id' => ['nullable', Rule::exists(User::class, 'id')],
             'notes' => ['nullable', 'string'],
             'terms' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],
@@ -57,13 +73,23 @@ class SalesOrderController extends Controller
             'items.*.tax_percent' => ['nullable', 'integer', 'min:0', 'max:100'],
         ]);
 
+        $kind = $data['kind'] ?? 'order';
+
         try {
-            $order = DB::connection('tenant')->transaction(function () use ($data, $request, $orders) {
+            $order = DB::connection('tenant')->transaction(function () use ($data, $kind, $request, $orders) {
                 $summary = DocumentLineCalculator::summarize($data['items']);
 
                 $order = SalesOrder::query()->create([
-                    'number' => $orders->nextNumber(),
+                    'number' => $orders->nextNumber($kind),
+                    'kind' => $kind,
                     'customer_id' => $data['customer_id'],
+                    'payment_term_id' => $data['payment_term_id'] ?? null,
+                    'warehouse_id' => $data['warehouse_id'] ?? null,
+                    'validity_date' => $data['validity_date'] ?? null,
+                    'ordered_at' => $data['ordered_at'] ?? null,
+                    'commitment_date' => $data['commitment_date'] ?? null,
+                    'client_order_ref' => $data['client_order_ref'] ?? null,
+                    'salesperson_id' => $data['salesperson_id'] ?? $request->user()->id,
                     'status' => 'draft',
                     'subtotal' => $summary['subtotal'],
                     'discount_total' => $summary['discount_total'],
@@ -93,14 +119,14 @@ class SalesOrderController extends Controller
 
         return redirect()
             ->route('tenant.orders.show', $order)
-            ->with('status', 'Sales order created as draft.');
+            ->with('status', $kind === 'quotation' ? 'Quotation created as draft.' : 'Sales order created as draft.');
     }
 
     public function show(Request $request, SalesOrder $order): View
     {
         abort_unless($request->user()->can('sales.orders.view'), 403);
 
-        $order->load(['customer', 'items.product', 'creator', 'invoice']);
+        $order->load(['customer', 'items.product', 'creator', 'invoice', 'deliveries.moves.product']);
 
         return view('tenant.orders.show', compact('order'));
     }
@@ -115,7 +141,42 @@ class SalesOrderController extends Controller
             return back()->withErrors(['order' => $e->getMessage()]);
         }
 
-        return back()->with('status', 'Order confirmed and stock deducted.');
+        return back()->with('status', 'Order confirmed and ready for delivery.');
+    }
+
+    public function deliver(Request $request, SalesOrder $order, SalesOrderService $orders): RedirectResponse
+    {
+        abort_unless($request->user()->can('inventory.operations.create'), 403);
+
+        $data = $request->validate([
+            'items' => ['nullable', 'array'],
+            'items.*.product_id' => ['required_with:items', Rule::exists(Product::class, 'id')],
+            'items.*.quantity' => ['required_with:items', 'integer', 'min:0'],
+        ]);
+
+        $lines = null;
+
+        if (array_key_exists('items', $data)) {
+            $lines = array_values(array_filter(
+                array_map(fn (array $line) => [
+                    'product_id' => (int) $line['product_id'],
+                    'quantity' => (int) $line['quantity'],
+                ], $data['items'] ?? []),
+                fn (array $line) => $line['quantity'] > 0,
+            ));
+
+            if ($lines === []) {
+                return back()->withErrors(['items' => 'Enter at least one quantity to deliver.']);
+            }
+        }
+
+        try {
+            $orders->deliver($order, $request->user(), $lines);
+        } catch (InvalidArgumentException|RuntimeException $e) {
+            return back()->withErrors(['order' => $e->getMessage()]);
+        }
+
+        return back()->with('status', 'Delivery validated and stock deducted.');
     }
 
     public function destroy(Request $request, SalesOrder $order): RedirectResponse

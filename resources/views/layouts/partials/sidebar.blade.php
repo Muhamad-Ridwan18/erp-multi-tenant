@@ -59,7 +59,7 @@
                         </li>
                     @endcan
 
-                    @canany(['sales.customers.view', 'sales.orders.view', 'inventory.products.view'])
+                    @canany(['sales.customers.view', 'sales.orders.view', 'inventory.products.view', 'inventory.warehouses.view', 'inventory.operations.view'])
                         <li class="nav-section-title">Sales &amp; Inventory</li>
                     @endcanany
                     @can('sales.customers.view')
@@ -86,8 +86,24 @@
                             </a>
                         </li>
                     @endcan
+                    @can('inventory.warehouses.view')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('tenant.warehouses.*') ? 'active' : '' }}" href="{{ route('tenant.warehouses.index') }}">
+                                <span class="nav-link-icon"><i class="ti ti-building-warehouse"></i></span>
+                                <span class="nav-link-title">Warehouses</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('inventory.operations.view')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('tenant.operations.*') ? 'active' : '' }}" href="{{ route('tenant.operations.index') }}">
+                                <span class="nav-link-icon"><i class="ti ti-arrows-exchange"></i></span>
+                                <span class="nav-link-title">Operations</span>
+                            </a>
+                        </li>
+                    @endcan
 
-                    @canany(['finance.invoices.view', 'finance.bills.view'])
+                    @canany(['finance.invoices.view', 'finance.bills.view', 'finance.taxes.view'])
                         <li class="nav-section-title">Finance</li>
                     @endcanany
                     @can('finance.invoices.view')
@@ -106,8 +122,16 @@
                             </a>
                         </li>
                     @endcan
+                    @can('finance.taxes.view')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('tenant.taxes.*') ? 'active' : '' }}" href="{{ route('tenant.taxes.index') }}">
+                                <span class="nav-link-icon"><i class="ti ti-percentage"></i></span>
+                                <span class="nav-link-title">Taxes</span>
+                            </a>
+                        </li>
+                    @endcan
 
-                    @canany(['settings.users.view', 'settings.roles.view'])
+                    @canany(['settings.users.view', 'settings.roles.view', 'settings.categories.manage'])
                         <li class="nav-section-title">Settings</li>
                     @endcanany
                     @can('settings.users.view')
@@ -123,6 +147,14 @@
                             <a class="nav-link {{ request()->routeIs('tenant.roles.*') ? 'active' : '' }}" href="{{ route('tenant.roles.index') }}">
                                 <span class="nav-link-icon"><i class="ti ti-shield-lock"></i></span>
                                 <span class="nav-link-title">Roles</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('settings.categories.manage')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('tenant.categories.*') ? 'active' : '' }}" href="{{ route('tenant.categories.index') }}">
+                                <span class="nav-link-icon"><i class="ti ti-category"></i></span>
+                                <span class="nav-link-title">Product categories</span>
                             </a>
                         </li>
                     @endcan

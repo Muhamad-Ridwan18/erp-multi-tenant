@@ -14,7 +14,14 @@ class Invoice extends Model
         'number',
         'customer_id',
         'sales_order_id',
+        'invoice_date',
+        'due_date',
+        'payment_term_id',
+        'journal_id',
+        'currency_id',
+        'reference',
         'status',
+        'payment_state',
         'subtotal',
         'discount_total',
         'tax_total',
@@ -29,6 +36,8 @@ class Invoice extends Model
     protected function casts(): array
     {
         return [
+            'invoice_date' => 'date',
+            'due_date' => 'date',
             'subtotal' => 'integer',
             'discount_total' => 'integer',
             'tax_total' => 'integer',
@@ -46,6 +55,21 @@ class Invoice extends Model
     public function salesOrder(): BelongsTo
     {
         return $this->belongsTo(SalesOrder::class);
+    }
+
+    public function paymentTerm(): BelongsTo
+    {
+        return $this->belongsTo(PaymentTerm::class);
+    }
+
+    public function journal(): BelongsTo
+    {
+        return $this->belongsTo(Journal::class);
+    }
+
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class);
     }
 
     public function items(): HasMany

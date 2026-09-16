@@ -2,29 +2,29 @@
 
 Multi-tenant ERP foundation with **DB-per-tenant** and **subdomain** routing.
 
-Reference ERP: **AureusERP** at `D:\DEV\Daksa\erp` (plugins `purchases`, `inventories`, `sales`, `accounts`/`invoices`).
+Reference ERP: **AureusERP** at `D:\DEV\Daksa\erp` (plugins `purchases`, `inventories`, `sales`, `accounts`).
 
 ## Four mandatory business modules
 
-| Daksa module | Aureus reference | Core entities (target) |
-|--------------|------------------|----------------------|
-| **Procurement** | `plugins/webkul/purchases` | Vendors, PO/RFQ, goods receipt → stock |
-| **Inventory** | `plugins/webkul/inventories` | Products, stock moves, warehouses (later) |
-| **Finance** | `plugins/webkul/accounts` + `invoices` | Customer invoices, vendor bills, payments |
-| **Sales** | `plugins/webkul/sales` | Customers, quotations, sales orders → delivery/stock |
+| Daksa module | Aureus reference | Core entities (Wave 1) |
+|--------------|------------------|------------------------|
+| **Procurement** | `plugins/webkul/purchases` | Vendors, RFQ/PO, partial receipt → stock, bill |
+| **Inventory** | `plugins/webkul/inventories` | Products, warehouses/locations, stock quants, receipt/delivery ops |
+| **Finance** | `plugins/webkul/accounts` | Manual + linked invoices/bills, taxes, journals, CoA, payments + JE |
+| **Sales** | `plugins/webkul/sales` | Customers, quotations/orders, delivery → stock out, invoice |
 
-Cross-module flows (from Aureus):
+Cross-module flows:
 
 ```
 Sales order confirm  → delivery / stock out
-Purchase order confirm → goods receipt / stock in
-Sales invoicing      → customer invoice (finance)
-PO billing           → vendor bill (finance)
+Purchase order confirm → goods receipt / stock in (partial OK)
+Sales invoicing      → customer invoice (finance) → post JE → pay
+PO billing           → vendor bill (finance) → post JE → pay
 ```
 
 ## Admin UI shell
 
-Admin layout uses **[Tabler](https://github.com/tabler/tabler)** (`@tabler/core` via Vite): vertical sidebar, page header, Bootstrap 5 utilities. Document forms stay Blade + Tom Select (no Filament).
+Admin layout uses **[Tabler](https://github.com/tabler/tabler)** (`@tabler/core` via Vite): vertical sidebar, page header, Bootstrap 5 utilities. Document forms stay Blade + Tom Select (no Filament). Dark mode via `data-bs-theme` + moon/sun toggle.
 
 ## Form UX (vs Aureus reference)
 
@@ -38,18 +38,26 @@ Document forms mimic Aureus patterns:
 - Tabs: Order lines / Other info / Terms
 - Progress stepper on document show pages
 - Inline create customer/vendor from SO/PO forms
-- Product form: 2/3 + 1/3 layout (identity vs pricing)
+- Product form: type, barcode, category, UoM, cost, sales price
 
-
-## Current implementation status
+## Current implementation status (Wave 1)
 
 | Module | Status | Notes |
 |--------|--------|-------|
-| Procurement | Partial | Vendors + PO draft→confirm→receive (stock in) |
-| Inventory | Partial | Products + stock adjust + sale/purchase movements |
-| Finance | Partial | Invoices from SO, bills from PO, payments |
-| Sales | Partial | Customers, orders draft→confirm |
-| Settings | Done | Users, roles, permissions |
+| Procurement | Wave 1 | Vendors; PO draft→sent→confirm; partial receive via stock ops; bill from received qty |
+| Inventory | Wave 1 | Products (Aureus fields); warehouses/locations; stock quants; receipt/delivery/internal ops |
+| Finance | Wave 1 (`accounts`) | Manual + SO/PO-linked invoices/bills; taxes; CoA; journals; post writes JE; payments |
+| Sales | Wave 1 | Customers; quotation/order fields; confirm without stock out; deliver deducts stock |
+| Settings | Done | Users, roles, permissions, categories, taxes UI |
+| Masters | Wave 1 | UoM, currencies, payment terms, seeded on tenant provision |
+
+## Out of Wave 1 (later)
+
+- Manufacturing, barcode
+- Routes/putaway/replenishment depth, lots/serials UI
+- Full multi-currency FX, bank reconciliation, fiscal positions
+- Credit notes / refunds UI polish
+- Vendor/customer portal
 
 ## Concepts
 
@@ -68,38 +76,6 @@ Permission      → seeded into each tenant DB from config
 | `erp.webyouneed.id` (central) | Platform console |
 | `{slug}.erp.webyouneed.id` | Tenant workspace |
 
-DNS: point `*.erp.webyouneed.id` (and apex) to the server. App config:
-
-```
-TENANCY_CENTRAL_DOMAINS=erp.webyouneed.id,www.erp.webyouneed.id
-TENANCY_BASE_HOST=erp.webyouneed.id
-TENANCY_DB_PREFIX=daksa_t_
-```
-
-## Databases
-
-| Connection | Contents |
-|------------|----------|
-| `central` | tenants, plans, modules, subscriptions, platform users |
-| `tenant` (runtime) | users, roles, permissions, business tables, cache/jobs |
-
-Creating a tenant **automatically**:
-
-1. Inserts central tenant row (`database` = `daksa_t_{slug}`)
-2. `CREATE DATABASE` (or SQLite file)
-3. Runs `database/migrations/tenant/*`
-4. Seeds permission catalog + optional admin user
-
-## Auth checks
-
-```php
-Gate::authorize('sales.orders.view');
-```
-
-Platform admins (central only) bypass permission checks.
-
-Permission pattern: `{module}.{resource}.{action}` (e.g. `procurement.orders.confirm`).
-
 ## Demo accounts (after migrate --seed)
 
 | Email | Password | Where |
@@ -108,28 +84,6 @@ Permission pattern: `{module}.{resource}.{action}` (e.g. `procurement.orders.con
 | `admin@demo.test` | `password` | `demo.{base_host}` |
 | `sales@demo.test` | `password` | `demo.{base_host}` |
 
-## Nginx (example)
-
-```nginx
-server {
-    listen 80;
-    listen 443 ssl;
-    server_name erp.webyouneed.id *.erp.webyouneed.id;
-
-    root /var/www/Daksa-Erp/public;
-    index index.php;
-
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
-
-    location ~ \.php$ {
-        include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
-    }
-}
-```
-
 ## Artisan
 
 ```bash
@@ -137,26 +91,3 @@ php artisan migrate              # central
 php artisan tenants:migrate      # all tenant DBs
 php artisan tenants:migrate --tenant=demo
 ```
-
-## Run locally
-
-```bash
-php artisan migrate:fresh --seed
-php artisan serve --host=127.0.0.1 --port=8001
-```
-
-- Platform: http://localhost:8001/login  
-- Tenant: http://demo.localhost:8001/login (set `TENANCY_BASE_HOST=localhost`)
-
-## Suggested build order
-
-1. ~~**Procurement** — vendors + PO draft→confirm→receipt (stock in)~~ ✅
-2. ~~**Finance** — invoice from confirmed SO; bill from confirmed PO~~ ✅
-3. Perdalam **Inventory** — warehouses, transfer, richer stock moves
-4. Perdalam **Sales** — quotation, delivery
-
-## Later
-
-- Billing / payment gateway (SaaS subscription)
-- Realtime events
-- Aureus-level inventory (routes, lots, replenishment)

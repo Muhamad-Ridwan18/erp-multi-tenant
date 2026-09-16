@@ -5,21 +5,20 @@ namespace Tests\Feature;
 use App\Models\Permission;
 use App\Models\Plan;
 use App\Models\Role;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\TenantProvisioner;
-use App\Support\TenantContext;
 use App\Support\TenantDatabaseManager;
 use Database\Seeders\ModuleSeeder;
 use Database\Seeders\PlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 class RoleManagementTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected \App\Models\Tenant $tenant;
+    protected Tenant $tenant;
 
     protected User $admin;
 
@@ -28,8 +27,6 @@ class RoleManagementTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        File::ensureDirectoryExists(database_path('tenants'));
 
         $this->seed([
             ModuleSeeder::class,
@@ -68,18 +65,6 @@ class RoleManagementTest extends TestCase
         $this->sales->roles()->sync([$salesRole->id]);
 
         $databases->disconnect();
-    }
-
-    protected function tearDown(): void
-    {
-        TenantContext::clear();
-        app(TenantDatabaseManager::class)->disconnect();
-
-        foreach (File::glob(database_path('tenants/*.sqlite')) as $file) {
-            File::delete($file);
-        }
-
-        parent::tearDown();
     }
 
     protected function onTenantHost(): static

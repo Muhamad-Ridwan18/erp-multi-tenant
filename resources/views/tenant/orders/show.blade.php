@@ -13,6 +13,19 @@
     <div class="mb-3 d-flex flex-wrap align-items-start justify-content-between gap-2">
         <div class="d-flex flex-wrap align-items-center gap-2">
             <x-badge :tone="$order->status === 'confirmed' ? 'success' : 'warning'">{{ $order->status }}</x-badge>
+            @php
+                $deliveryTone = match ($order->delivery_status) {
+                    'full' => 'success',
+                    'partial' => 'brand',
+                    default => 'neutral',
+                };
+                $deliveryLabel = match ($order->delivery_status) {
+                    'full' => 'delivered',
+                    'partial' => 'partially delivered',
+                    default => 'not delivered',
+                };
+            @endphp
+            <x-badge :tone="$deliveryTone">{{ $deliveryLabel }}</x-badge>
             <span class="text-secondary">{{ $order->customer?->name }}</span>
         </div>
         <div class="d-flex flex-wrap gap-2">
@@ -28,6 +41,14 @@
                         @csrf
                         @method('DELETE')
                         <x-button type="submit" variant="danger">Delete</x-button>
+                    </form>
+                @endcan
+            @endif
+            @if ($order->isConfirmed() && $order->delivery_status !== 'full')
+                @can('inventory.operations.create')
+                    <form method="POST" action="{{ route('tenant.orders.deliver', $order) }}" onsubmit="return confirm('Validate delivery and deduct stock?')">
+                        @csrf
+                        <x-button type="submit">Deliver</x-button>
                     </form>
                 @endcan
             @endif
@@ -94,11 +115,12 @@
         </div>
     @endif
 
-    <x-table class="mt-3" :headers="['Product', 'Qty', 'Price', 'Disc %', 'Tax %', 'Amount']">
+    <x-table class="mt-3" :headers="['Product', 'Qty', 'Delivered', 'Price', 'Disc %', 'Tax %', 'Amount']">
         @foreach ($order->items as $item)
             <tr>
                 <td class="fw-medium">{{ $item->product?->name }}</td>
                 <td>{{ $item->quantity }}</td>
+                <td>{{ $item->qty_delivered }}</td>
                 <td>Rp {{ number_format($item->unit_price, 0, ',', '.') }}</td>
                 <td>{{ $item->discount_percent }}%</td>
                 <td>{{ $item->tax_percent }}%</td>
@@ -106,6 +128,25 @@
             </tr>
         @endforeach
     </x-table>
+
+    @if ($order->deliveries->isNotEmpty())
+        <x-table class="mt-3" :headers="['Delivery', 'Status', 'Validated', 'Lines']" title="Deliveries">
+            @foreach ($order->deliveries as $delivery)
+                <tr>
+                    <td class="font-monospace small">
+                        @can('inventory.operations.view')
+                            <a href="{{ route('tenant.operations.show', $delivery) }}">{{ $delivery->number }}</a>
+                        @else
+                            {{ $delivery->number }}
+                        @endcan
+                    </td>
+                    <td><x-badge :tone="$delivery->status === 'done' ? 'success' : 'warning'">{{ $delivery->status }}</x-badge></td>
+                    <td class="text-secondary">{{ $delivery->done_at?->format('d M Y H:i') ?? '—' }}</td>
+                    <td class="text-secondary">{{ $delivery->moves->sum('done_qty') }} units</td>
+                </tr>
+            @endforeach
+        </x-table>
+    @endif
 
     <div class="mt-3 d-flex justify-content-end">
         <div style="min-width:16rem">
