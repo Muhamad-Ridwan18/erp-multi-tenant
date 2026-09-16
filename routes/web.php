@@ -4,9 +4,11 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Platform\TenantController;
 use App\Http\Controllers\Tenant\AgingController;
+use App\Http\Controllers\Tenant\BankStatementController;
 use App\Http\Controllers\Tenant\BarcodeController;
 use App\Http\Controllers\Tenant\BillController;
 use App\Http\Controllers\Tenant\BomController;
+use App\Http\Controllers\Tenant\CurrencyController;
 use App\Http\Controllers\Tenant\CustomerController;
 use App\Http\Controllers\Tenant\InvoiceController;
 use App\Http\Controllers\Tenant\JournalEntryController;
@@ -184,6 +186,18 @@ Route::middleware(['auth', 'tenant.domain'])->group(function () {
         Route::get('/journal-entries', [JournalEntryController::class, 'index'])->name('journal-entries.index');
         Route::get('/journal-entries/{journalEntry}', [JournalEntryController::class, 'show'])->name('journal-entries.show');
         Route::get('/aging', [AgingController::class, 'index'])->name('aging.index');
+
+        Route::get('/currencies', [CurrencyController::class, 'index'])->name('currencies.index');
+        Route::post('/currencies', [CurrencyController::class, 'store'])->name('currencies.store');
+        Route::put('/currencies/{currency}', [CurrencyController::class, 'update'])->name('currencies.update');
+
+        Route::get('/bank-statements', [BankStatementController::class, 'index'])->name('bank-statements.index');
+        Route::get('/bank-statements/create', [BankStatementController::class, 'create'])->name('bank-statements.create');
+        Route::post('/bank-statements', [BankStatementController::class, 'store'])->name('bank-statements.store');
+        Route::get('/bank-statements/{bankStatement}', [BankStatementController::class, 'show'])->name('bank-statements.show');
+        Route::post('/bank-statements/{bankStatement}/lines/{line}/match', [BankStatementController::class, 'match'])->name('bank-statements.match');
+        Route::post('/bank-statements/{bankStatement}/lines/{line}/unmatch', [BankStatementController::class, 'unmatch'])->name('bank-statements.unmatch');
+        Route::post('/bank-statements/{bankStatement}/complete', [BankStatementController::class, 'complete'])->name('bank-statements.complete');
     });
 
     Route::prefix('settings')->name('tenant.')->group(function () {

@@ -14,6 +14,21 @@
                 <div id="barcode-message" class="mt-3 text-secondary"></div>
             </x-card>
 
+            <x-card class="mt-3">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                    <div>
+                        <div class="fw-medium">Camera scanner</div>
+                        <div class="text-secondary small">Uses device camera via html5-qrcode (HTTPS or localhost).</div>
+                    </div>
+                    <div class="btn-list">
+                        <button type="button" class="btn btn-primary btn-sm" id="camera-start">Start camera</button>
+                        <button type="button" class="btn btn-ghost-secondary btn-sm d-none" id="camera-stop">Stop</button>
+                    </div>
+                </div>
+                <div id="qr-reader" class="rounded border bg-dark" style="min-height: 220px; overflow: hidden;"></div>
+                <div id="camera-status" class="text-secondary small mt-2"></div>
+            </x-card>
+
             <div id="barcode-result" class="card mt-3 d-none">
                 <div class="card-body">
                     <div class="fw-bold fs-3" id="product-name"></div>
@@ -54,12 +69,19 @@
     </div>
 
     @push('scripts')
+        <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
         <script>
             (() => {
                 const input = document.getElementById('barcode-input');
                 const message = document.getElementById('barcode-message');
                 const result = document.getElementById('barcode-result');
                 const lookupUrl = @json(route('tenant.barcode.lookup'));
+                const cameraStatus = document.getElementById('camera-status');
+                const startBtn = document.getElementById('camera-start');
+                const stopBtn = document.getElementById('camera-stop');
+                let scanner = null;
+                let lastCode = '';
+                let lastAt = 0;
 
                 async function lookup(code) {
                     message.textContent = 'Looking up…';
@@ -82,6 +104,7 @@
                     const scrap = document.getElementById('scrap-product-id');
                     if (scrap) scrap.value = p.id;
                     result.classList.remove('d-none');
+                    input.value = code;
                     input.select();
                 }
 
@@ -91,6 +114,55 @@
                         const code = input.value.trim();
                         if (code) lookup(code);
                     }
+                });
+
+                function onScanSuccess(decodedText) {
+                    const now = Date.now();
+                    if (decodedText === lastCode && now - lastAt < 2500) {
+                        return;
+                    }
+                    lastCode = decodedText;
+                    lastAt = now;
+                    lookup(decodedText.trim());
+                }
+
+                startBtn?.addEventListener('click', async () => {
+                    if (typeof Html5Qrcode === 'undefined') {
+                        cameraStatus.textContent = 'Camera library failed to load.';
+                        return;
+                    }
+
+                    cameraStatus.textContent = 'Starting camera…';
+                    scanner = new Html5Qrcode('qr-reader');
+
+                    try {
+                        await scanner.start(
+                            { facingMode: 'environment' },
+                            { fps: 10, qrbox: { width: 250, height: 250 } },
+                            onScanSuccess,
+                            () => {}
+                        );
+                        cameraStatus.textContent = 'Point the camera at a barcode.';
+                        startBtn.classList.add('d-none');
+                        stopBtn.classList.remove('d-none');
+                    } catch (err) {
+                        cameraStatus.textContent = 'Camera unavailable: ' + (err?.message || err);
+                        scanner = null;
+                    }
+                });
+
+                stopBtn?.addEventListener('click', async () => {
+                    if (!scanner) {
+                        return;
+                    }
+                    try {
+                        await scanner.stop();
+                        await scanner.clear();
+                    } catch (_) {}
+                    scanner = null;
+                    cameraStatus.textContent = 'Camera stopped.';
+                    stopBtn.classList.add('d-none');
+                    startBtn.classList.remove('d-none');
                 });
             })();
         </script>

@@ -57,6 +57,12 @@
                 <div class="text-secondary text-uppercase small">Total</div>
                 <div class="mt-2 fw-bold fs-4">{{ $invoice->formattedGrandTotal() }}</div>
                 <div class="text-secondary small">Paid Rp {{ number_format($invoice->amount_paid, 0, ',', '.') }}</div>
+                @if ($invoice->currency)
+                    <div class="text-secondary small mt-1">
+                        {{ $invoice->currency->code }} @ rate {{ rtrim(rtrim(number_format((float) $invoice->currency_rate, 6, '.', ''), '0'), '.') }}
+                        · company Rp {{ number_format($invoice->amount_company ?: $invoice->grand_total, 0, ',', '.') }}
+                    </div>
+                @endif
             </x-card>
         </div>
         <div class="col-lg-4">

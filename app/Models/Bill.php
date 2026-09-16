@@ -21,6 +21,7 @@ class Bill extends Model
         'payment_term_id',
         'journal_id',
         'currency_id',
+        'currency_rate',
         'reference',
         'status',
         'payment_state',
@@ -28,6 +29,7 @@ class Bill extends Model
         'discount_total',
         'tax_total',
         'grand_total',
+        'amount_company',
         'amount_paid',
         'notes',
         'terms',
@@ -44,7 +46,9 @@ class Bill extends Model
             'discount_total' => 'integer',
             'tax_total' => 'integer',
             'grand_total' => 'integer',
+            'amount_company' => 'integer',
             'amount_paid' => 'integer',
+            'currency_rate' => 'decimal:6',
             'posted_at' => 'datetime',
         ];
     }

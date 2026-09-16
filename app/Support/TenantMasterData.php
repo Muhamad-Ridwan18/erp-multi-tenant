@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Currency;
 use App\Models\Journal;
 use App\Models\PaymentTerm;
 use App\Models\ProductCategory;
@@ -41,6 +42,11 @@ class TenantMasterData
     public static function journals(): Collection
     {
         return self::fetch('journals', fn () => Journal::query()->where('is_active', true)->orderBy('code')->get());
+    }
+
+    public static function currencies(): Collection
+    {
+        return self::fetch('currencies', fn () => Currency::query()->where('is_active', true)->orderBy('code')->get());
     }
 
     public static function productCategories(): Collection

@@ -18,6 +18,8 @@ use InvalidArgumentException;
 
 class FinanceService
 {
+    public function __construct(protected CurrencyService $currencies) {}
+
     public function createInvoiceFromSalesOrder(SalesOrder $order, User $user): Invoice
     {
         if (! $order->isConfirmed()) {
@@ -33,6 +35,8 @@ class FinanceService
         return DB::connection('tenant')->transaction(function () use ($order, $user) {
             $invoiceDate = now()->toDateString();
             $due = $this->dueDate($invoiceDate, $order->paymentTerm);
+            $rate = (float) ($order->currency_rate ?: $this->currencies->rateFor($order->currency_id));
+            $grand = $order->grand_total ?: $order->subtotal;
 
             $invoice = Invoice::query()->create([
                 'number' => $this->nextNumber('INV'),
@@ -43,12 +47,14 @@ class FinanceService
                 'payment_term_id' => $order->payment_term_id,
                 'journal_id' => Journal::query()->where('code', 'INV')->value('id'),
                 'currency_id' => $order->currency_id,
+                'currency_rate' => $rate,
                 'status' => 'draft',
                 'payment_state' => 'not_paid',
                 'subtotal' => $order->subtotal,
                 'discount_total' => $order->discount_total ?? 0,
                 'tax_total' => $order->tax_total ?? 0,
-                'grand_total' => $order->grand_total ?: $order->subtotal,
+                'grand_total' => $grand,
+                'amount_company' => $this->currencies->toCompany((int) $grand, $rate),
                 'amount_paid' => 0,
                 'notes' => $order->notes,
                 'terms' => $order->terms,
@@ -87,6 +93,7 @@ class FinanceService
         return DB::connection('tenant')->transaction(function () use ($data, $user, $calc) {
             $invoiceDate = $data['invoice_date'] ?? now()->toDateString();
             $term = isset($data['payment_term_id']) ? PaymentTerm::query()->find($data['payment_term_id']) : null;
+            $rate = $this->currencies->rateFor($data['currency_id'] ?? null);
 
             $invoice = Invoice::query()->create([
                 'number' => $this->nextNumber('INV'),
@@ -96,6 +103,7 @@ class FinanceService
                 'payment_term_id' => $data['payment_term_id'] ?? null,
                 'journal_id' => $data['journal_id'] ?? Journal::query()->where('code', 'INV')->value('id'),
                 'currency_id' => $data['currency_id'] ?? null,
+                'currency_rate' => $rate,
                 'reference' => $data['reference'] ?? null,
                 'status' => 'draft',
                 'payment_state' => 'not_paid',
@@ -103,6 +111,7 @@ class FinanceService
                 'discount_total' => $calc['discount_total'],
                 'tax_total' => $calc['tax_total'],
                 'grand_total' => $calc['grand_total'],
+                'amount_company' => $this->currencies->toCompany((int) $calc['grand_total'], $rate),
                 'amount_paid' => 0,
                 'notes' => $data['notes'] ?? null,
                 'terms' => $data['terms'] ?? null,
@@ -163,6 +172,7 @@ class FinanceService
             }
 
             $calc = DocumentLineCalculator::summarize($itemsPayload);
+            $rate = (float) ($order->currency_rate ?: $this->currencies->rateFor($order->currency_id));
 
             $bill = Bill::query()->create([
                 'number' => $this->nextNumber('BILL'),
@@ -173,12 +183,14 @@ class FinanceService
                 'payment_term_id' => $order->payment_term_id,
                 'journal_id' => Journal::query()->where('code', 'BILL')->value('id'),
                 'currency_id' => $order->currency_id,
+                'currency_rate' => $rate,
                 'status' => 'draft',
                 'payment_state' => 'not_paid',
                 'subtotal' => $calc['subtotal'],
                 'discount_total' => $calc['discount_total'],
                 'tax_total' => $calc['tax_total'],
                 'grand_total' => $calc['grand_total'],
+                'amount_company' => $this->currencies->toCompany((int) $calc['grand_total'], $rate),
                 'amount_paid' => 0,
                 'notes' => $order->notes,
                 'terms' => $order->terms,
@@ -220,6 +232,7 @@ class FinanceService
         return DB::connection('tenant')->transaction(function () use ($data, $user, $calc) {
             $billDate = $data['bill_date'] ?? now()->toDateString();
             $term = isset($data['payment_term_id']) ? PaymentTerm::query()->find($data['payment_term_id']) : null;
+            $rate = $this->currencies->rateFor($data['currency_id'] ?? null);
 
             $bill = Bill::query()->create([
                 'number' => $this->nextNumber('BILL'),
@@ -229,6 +242,7 @@ class FinanceService
                 'payment_term_id' => $data['payment_term_id'] ?? null,
                 'journal_id' => $data['journal_id'] ?? Journal::query()->where('code', 'BILL')->value('id'),
                 'currency_id' => $data['currency_id'] ?? null,
+                'currency_rate' => $rate,
                 'reference' => $data['reference'] ?? null,
                 'status' => 'draft',
                 'payment_state' => 'not_paid',
@@ -236,6 +250,7 @@ class FinanceService
                 'discount_total' => $calc['discount_total'],
                 'tax_total' => $calc['tax_total'],
                 'grand_total' => $calc['grand_total'],
+                'amount_company' => $this->currencies->toCompany((int) $calc['grand_total'], $rate),
                 'amount_paid' => 0,
                 'notes' => $data['notes'] ?? null,
                 'terms' => $data['terms'] ?? null,
@@ -319,15 +334,20 @@ class FinanceService
         }
 
         return DB::connection('tenant')->transaction(function () use ($invoice, $amount, $user, $notes, $journalId) {
+            $rate = (float) ($invoice->currency_rate ?: $this->currencies->rateFor($invoice->currency_id));
+
             $payment = Payment::query()->create([
                 'number' => $this->nextNumber('PAY'),
                 'direction' => 'incoming',
                 'invoice_id' => $invoice->id,
                 'journal_id' => $journalId ?? Journal::query()->where('code', 'BANK')->value('id'),
                 'currency_id' => $invoice->currency_id,
+                'currency_rate' => $rate,
                 'amount' => $amount,
+                'amount_company' => $this->currencies->toCompany($amount, $rate),
                 'paid_at' => now(),
                 'notes' => $notes,
+                'is_reconciled' => false,
                 'created_by' => $user->id,
             ]);
 
@@ -358,15 +378,20 @@ class FinanceService
         }
 
         return DB::connection('tenant')->transaction(function () use ($bill, $amount, $user, $notes, $journalId) {
+            $rate = (float) ($bill->currency_rate ?: $this->currencies->rateFor($bill->currency_id));
+
             $payment = Payment::query()->create([
                 'number' => $this->nextNumber('PAY'),
                 'direction' => 'outgoing',
                 'bill_id' => $bill->id,
                 'journal_id' => $journalId ?? Journal::query()->where('code', 'BANK')->value('id'),
                 'currency_id' => $bill->currency_id,
+                'currency_rate' => $rate,
                 'amount' => $amount,
+                'amount_company' => $this->currencies->toCompany($amount, $rate),
                 'paid_at' => now(),
                 'notes' => $notes,
+                'is_reconciled' => false,
                 'created_by' => $user->id,
             ]);
 

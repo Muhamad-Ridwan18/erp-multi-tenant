@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Models\Currency;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Journal;
@@ -42,8 +43,9 @@ class InvoiceController extends Controller
         $taxes = TenantMasterData::taxes();
         $paymentTerms = TenantMasterData::paymentTerms();
         $journals = TenantMasterData::journals();
+        $currencies = TenantMasterData::currencies();
 
-        return view('tenant.invoices.create', compact('customers', 'products', 'taxes', 'paymentTerms', 'journals'));
+        return view('tenant.invoices.create', compact('customers', 'products', 'taxes', 'paymentTerms', 'journals', 'currencies'));
     }
 
     public function store(Request $request, FinanceService $finance): RedirectResponse
@@ -56,6 +58,7 @@ class InvoiceController extends Controller
             'due_date' => ['nullable', 'date'],
             'payment_term_id' => ['nullable', Rule::exists(PaymentTerm::class, 'id')],
             'journal_id' => ['nullable', Rule::exists(Journal::class, 'id')],
+            'currency_id' => ['nullable', Rule::exists(Currency::class, 'id')],
             'reference' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string'],
             'terms' => ['nullable', 'string'],
@@ -85,7 +88,7 @@ class InvoiceController extends Controller
     {
         abort_unless($request->user()->can('finance.invoices.view'), 403);
 
-        $invoice->load(['customer', 'items.product', 'salesOrder', 'payments', 'creator']);
+        $invoice->load(['customer', 'currency', 'items.product', 'salesOrder', 'payments', 'creator']);
 
         return view('tenant.invoices.show', compact('invoice'));
     }

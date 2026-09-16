@@ -46,20 +46,18 @@ Document forms mimic Aureus patterns:
 | Module | Status | Notes |
 |--------|--------|-------|
 | Procurement | Wave 1 | Vendors; PO draft→sent→confirm; partial receive via stock ops; bill from received qty |
-| Inventory | Wave 1–3 | Products (+ tracking); warehouses; stock quants per lot; receipt/delivery/internal; scrap; order points; barcode; lots UI |
+| Inventory | Wave 1–4 | Products (+ tracking); warehouses; stock quants per lot; receipt/delivery/internal; scrap; order points; barcode + camera; lots UI |
 | Manufacturing | Wave 2–3 | Work centers; BOM + lines + routing ops; MO work orders; produce with lot; unbuild |
-| Finance | Wave 1–3 (`accounts`) | Invoices/bills; JE post/pay; credit notes/refunds; journal entries UI; AR/AP aging |
+| Finance | Wave 1–4 (`accounts`) | Invoices/bills; JE post/pay; credit notes; aging; multi-currency FX rates; bank statement reconciliation |
 | Sales | Wave 1 | Customers; quotation/order fields; confirm without stock out; deliver deducts stock |
 | Settings | Done | Users, roles, permissions, categories, taxes UI |
-| Masters | Wave 1–2 | UoM, currencies, payment terms, scrap/production locations, default work center |
+| Masters | Wave 1–4 | UoM, currencies (+ rates), payment terms, scrap/production locations, default work center |
 
-## Later (Wave 4+)
+## Later (Wave 5+)
 
 - Routes/putaway sophistication, package types
-- Full multi-currency FX, bank reconciliation, fiscal positions
-- Vendor/customer portal
-- Camera barcode (html5-qrcode) polish
-
+- Fiscal positions; vendor/customer portal
+- Advanced bank feed import (OFX/CSV auto-match rules)
 ## Concepts
 
 ```

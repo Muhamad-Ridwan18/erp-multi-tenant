@@ -101,6 +101,11 @@ return [
         ['module' => 'finance', 'resource' => 'journals', 'action' => 'view', 'description' => 'View journals'],
         ['module' => 'finance', 'resource' => 'accounts', 'action' => 'view', 'description' => 'View chart of accounts'],
         ['module' => 'finance', 'resource' => 'aging', 'action' => 'view', 'description' => 'View AR/AP aging'],
+        ['module' => 'finance', 'resource' => 'currencies', 'action' => 'view', 'description' => 'View currencies'],
+        ['module' => 'finance', 'resource' => 'currencies', 'action' => 'manage', 'description' => 'Manage currency rates'],
+        ['module' => 'finance', 'resource' => 'bank_statements', 'action' => 'view', 'description' => 'View bank statements'],
+        ['module' => 'finance', 'resource' => 'bank_statements', 'action' => 'manage', 'description' => 'Create bank statements'],
+        ['module' => 'finance', 'resource' => 'bank_statements', 'action' => 'reconcile', 'description' => 'Reconcile bank statements'],
 
         // Settings masters
         ['module' => 'settings', 'resource' => 'uoms', 'action' => 'view', 'description' => 'View units of measure'],

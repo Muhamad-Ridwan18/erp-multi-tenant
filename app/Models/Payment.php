@@ -16,10 +16,14 @@ class Payment extends Model
         'bill_id',
         'journal_id',
         'currency_id',
+        'currency_rate',
         'amount',
+        'amount_company',
         'paid_at',
         'notes',
         'memo',
+        'is_reconciled',
+        'bank_statement_line_id',
         'created_by',
     ];
 
@@ -27,6 +31,9 @@ class Payment extends Model
     {
         return [
             'amount' => 'integer',
+            'amount_company' => 'integer',
+            'currency_rate' => 'decimal:6',
+            'is_reconciled' => 'boolean',
             'paid_at' => 'datetime',
         ];
     }
@@ -49,6 +56,11 @@ class Payment extends Model
     public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class);
+    }
+
+    public function bankStatementLine(): BelongsTo
+    {
+        return $this->belongsTo(BankStatementLine::class);
     }
 
     public function creator(): BelongsTo

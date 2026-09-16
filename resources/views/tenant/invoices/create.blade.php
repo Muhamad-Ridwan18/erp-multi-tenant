@@ -56,6 +56,18 @@
                             </x-select>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <x-select label="Currency" name="currency_id" placeholder="Search currency…">
+                                <option value="">IDR (company)</option>
+                                @foreach ($currencies as $currency)
+                                    <option value="{{ $currency->id }}" @selected((string) old('currency_id') === (string) $currency->id)>
+                                        {{ $currency->code }} — {{ $currency->name }} (rate {{ rtrim(rtrim(number_format((float) $currency->rate, 6, '.', ''), '0'), '.') }})
+                                    </option>
+                                @endforeach
+                            </x-select>
+                        </div>
+                    </div>
                 </div>
             </div>
         </x-card>

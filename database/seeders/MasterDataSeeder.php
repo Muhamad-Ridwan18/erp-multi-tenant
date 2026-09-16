@@ -24,6 +24,14 @@ class MasterDataSeeder extends Seeder
             ['code' => 'IDR'],
             ['name' => 'Indonesian Rupiah', 'symbol' => 'Rp', 'rate' => 1, 'is_active' => true]
         );
+        Currency::query()->updateOrCreate(
+            ['code' => 'USD'],
+            ['name' => 'US Dollar', 'symbol' => '$', 'rate' => 16000, 'is_active' => true]
+        );
+        Currency::query()->updateOrCreate(
+            ['code' => 'EUR'],
+            ['name' => 'Euro', 'symbol' => '€', 'rate' => 17500, 'is_active' => true]
+        );
 
         $unitCat = UomCategory::query()->updateOrCreate(['name' => 'Unit']);
         $pcs = Uom::query()->updateOrCreate(
