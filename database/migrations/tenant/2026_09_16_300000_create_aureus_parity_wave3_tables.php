@@ -25,8 +25,21 @@ return new class extends Migration
         });
 
         Schema::table('stock_quants', function (Blueprint $table) {
+            $table->unsignedBigInteger('lot_id')->nullable()->after('location_id');
+        });
+
+        Schema::table('stock_quants', function (Blueprint $table) {
+            // Keep covering indexes so MySQL can drop the composite unique used by FKs.
+            $table->index('product_id');
+            $table->index('location_id');
+        });
+
+        Schema::table('stock_quants', function (Blueprint $table) {
             $table->dropUnique(['product_id', 'location_id']);
-            $table->foreignId('lot_id')->nullable()->after('location_id')->constrained('lots')->nullOnDelete();
+        });
+
+        Schema::table('stock_quants', function (Blueprint $table) {
+            $table->foreign('lot_id')->references('id')->on('lots')->nullOnDelete();
             $table->unique(['product_id', 'location_id', 'lot_id']);
         });
 
@@ -89,7 +102,8 @@ return new class extends Migration
 
         Schema::table('stock_quants', function (Blueprint $table) {
             $table->dropUnique(['product_id', 'location_id', 'lot_id']);
-            $table->dropConstrainedForeignId('lot_id');
+            $table->dropForeign(['lot_id']);
+            $table->dropColumn('lot_id');
             $table->unique(['product_id', 'location_id']);
         });
 
