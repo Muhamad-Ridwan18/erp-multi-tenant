@@ -22,4 +22,16 @@
             </tr>
         @endforeach
     </x-table>
+
+    @if ($bom->operations->isNotEmpty())
+        <x-table class="mt-3" :headers="['Operation', 'Work center', 'Minutes']" title="Routing">
+            @foreach ($bom->operations as $operation)
+                <tr>
+                    <td class="fw-medium">{{ $operation->name }}</td>
+                    <td>{{ $operation->workCenter?->name ?: '—' }}</td>
+                    <td>{{ $operation->duration_minutes }}</td>
+                </tr>
+            @endforeach
+        </x-table>
+    @endif
 @endsection

@@ -14,6 +14,7 @@ class Product extends Model
         'sku',
         'name',
         'type',
+        'tracking',
         'barcode',
         'product_category_id',
         'description',
@@ -63,6 +64,16 @@ class Product extends Model
     public function stockQuants(): HasMany
     {
         return $this->hasMany(StockQuant::class);
+    }
+
+    public function lots(): HasMany
+    {
+        return $this->hasMany(Lot::class);
+    }
+
+    public function tracksLots(): bool
+    {
+        return in_array($this->tracking, ['lot', 'serial'], true);
     }
 
     public function availableQty(): int

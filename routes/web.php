@@ -3,11 +3,14 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Platform\TenantController;
+use App\Http\Controllers\Tenant\AgingController;
 use App\Http\Controllers\Tenant\BarcodeController;
 use App\Http\Controllers\Tenant\BillController;
 use App\Http\Controllers\Tenant\BomController;
 use App\Http\Controllers\Tenant\CustomerController;
 use App\Http\Controllers\Tenant\InvoiceController;
+use App\Http\Controllers\Tenant\JournalEntryController;
+use App\Http\Controllers\Tenant\LotController;
 use App\Http\Controllers\Tenant\ManufacturingOrderController;
 use App\Http\Controllers\Tenant\OrderPointController;
 use App\Http\Controllers\Tenant\ProductCategoryController;
@@ -18,6 +21,7 @@ use App\Http\Controllers\Tenant\SalesOrderController;
 use App\Http\Controllers\Tenant\ScrapController;
 use App\Http\Controllers\Tenant\StockOperationController;
 use App\Http\Controllers\Tenant\TaxController;
+use App\Http\Controllers\Tenant\UnbuildOrderController;
 use App\Http\Controllers\Tenant\UserController;
 use App\Http\Controllers\Tenant\VendorController;
 use App\Http\Controllers\Tenant\WarehouseController;
@@ -106,6 +110,9 @@ Route::middleware(['auth', 'tenant.domain'])->group(function () {
         Route::get('/barcode/lookup', [BarcodeController::class, 'lookup'])->name('barcode.lookup');
         Route::post('/barcode/adjust', [BarcodeController::class, 'adjust'])->name('barcode.adjust');
         Route::post('/barcode/scrap', [BarcodeController::class, 'scrap'])->name('barcode.scrap');
+
+        Route::get('/lots', [LotController::class, 'index'])->name('lots.index');
+        Route::post('/lots', [LotController::class, 'store'])->name('lots.store');
     });
 
     Route::prefix('manufacturing')->name('tenant.')->group(function () {
@@ -123,7 +130,14 @@ Route::middleware(['auth', 'tenant.domain'])->group(function () {
         Route::get('/orders/{manufacturingOrder}', [ManufacturingOrderController::class, 'show'])->name('manufacturing-orders.show');
         Route::post('/orders/{manufacturingOrder}/confirm', [ManufacturingOrderController::class, 'confirm'])->name('manufacturing-orders.confirm');
         Route::post('/orders/{manufacturingOrder}/produce', [ManufacturingOrderController::class, 'produce'])->name('manufacturing-orders.produce');
+        Route::post('/orders/{manufacturingOrder}/work-orders/{workOrder}/complete', [ManufacturingOrderController::class, 'completeWorkOrder'])->name('manufacturing-orders.work-orders.complete');
         Route::post('/orders/{manufacturingOrder}/cancel', [ManufacturingOrderController::class, 'cancel'])->name('manufacturing-orders.cancel');
+
+        Route::get('/unbuilds', [UnbuildOrderController::class, 'index'])->name('unbuilds.index');
+        Route::get('/unbuilds/create', [UnbuildOrderController::class, 'create'])->name('unbuilds.create');
+        Route::post('/unbuilds', [UnbuildOrderController::class, 'store'])->name('unbuilds.store');
+        Route::get('/unbuilds/{unbuild}', [UnbuildOrderController::class, 'show'])->name('unbuilds.show');
+        Route::post('/unbuilds/{unbuild}/validate', [UnbuildOrderController::class, 'validateOrder'])->name('unbuilds.validate');
     });
 
     Route::prefix('sales')->name('tenant.')->group(function () {
@@ -166,6 +180,10 @@ Route::middleware(['auth', 'tenant.domain'])->group(function () {
         Route::delete('/bills/{bill}', [BillController::class, 'destroy'])->name('bills.destroy');
 
         Route::get('/taxes', [TaxController::class, 'index'])->name('taxes.index');
+
+        Route::get('/journal-entries', [JournalEntryController::class, 'index'])->name('journal-entries.index');
+        Route::get('/journal-entries/{journalEntry}', [JournalEntryController::class, 'show'])->name('journal-entries.show');
+        Route::get('/aging', [AgingController::class, 'index'])->name('aging.index');
     });
 
     Route::prefix('settings')->name('tenant.')->group(function () {

@@ -4,9 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class ManufacturingOrder extends Model
+class UnbuildOrder extends Model
 {
     protected $connection = 'tenant';
 
@@ -15,17 +14,13 @@ class ManufacturingOrder extends Model
         'status',
         'product_id',
         'bill_of_material_id',
-        'work_center_id',
-        'uom_id',
+        'manufacturing_order_id',
+        'lot_id',
         'quantity',
-        'qty_produced',
         'source_location_id',
         'destination_location_id',
-        'origin',
-        'scheduled_at',
-        'started_at',
-        'finished_at',
         'notes',
+        'done_at',
         'created_by',
     ];
 
@@ -33,10 +28,7 @@ class ManufacturingOrder extends Model
     {
         return [
             'quantity' => 'integer',
-            'qty_produced' => 'integer',
-            'scheduled_at' => 'datetime',
-            'started_at' => 'datetime',
-            'finished_at' => 'datetime',
+            'done_at' => 'datetime',
         ];
     }
 
@@ -50,14 +42,14 @@ class ManufacturingOrder extends Model
         return $this->belongsTo(BillOfMaterial::class);
     }
 
-    public function workCenter(): BelongsTo
+    public function manufacturingOrder(): BelongsTo
     {
-        return $this->belongsTo(WorkCenter::class);
+        return $this->belongsTo(ManufacturingOrder::class);
     }
 
-    public function uom(): BelongsTo
+    public function lot(): BelongsTo
     {
-        return $this->belongsTo(Uom::class);
+        return $this->belongsTo(Lot::class);
     }
 
     public function sourceLocation(): BelongsTo
@@ -70,21 +62,6 @@ class ManufacturingOrder extends Model
         return $this->belongsTo(Location::class, 'destination_location_id');
     }
 
-    public function components(): HasMany
-    {
-        return $this->hasMany(ManufacturingOrderComponent::class);
-    }
-
-    public function workOrders(): HasMany
-    {
-        return $this->hasMany(WorkOrder::class)->orderBy('sort');
-    }
-
-    public function operations(): HasMany
-    {
-        return $this->hasMany(StockOperation::class);
-    }
-
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -93,11 +70,6 @@ class ManufacturingOrder extends Model
     public function isDraft(): bool
     {
         return $this->status === 'draft';
-    }
-
-    public function isConfirmed(): bool
-    {
-        return $this->status === 'confirmed';
     }
 
     public function isDone(): bool

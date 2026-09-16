@@ -46,19 +46,19 @@ Document forms mimic Aureus patterns:
 | Module | Status | Notes |
 |--------|--------|-------|
 | Procurement | Wave 1 | Vendors; PO draft→sent→confirm; partial receive via stock ops; bill from received qty |
-| Inventory | Wave 1+2 | Products; warehouses/locations; stock quants; receipt/delivery/internal; scrap; order points; barcode scan |
-| Manufacturing | Wave 2 | Work centers; BOM + lines; MO draft→confirm→produce (consume components, receive FG) |
-| Finance | Wave 1+2 (`accounts`) | Manual + SO/PO-linked invoices/bills; taxes; CoA; journals; post JE; payments; credit notes / vendor refunds |
+| Inventory | Wave 1–3 | Products (+ tracking); warehouses; stock quants per lot; receipt/delivery/internal; scrap; order points; barcode; lots UI |
+| Manufacturing | Wave 2–3 | Work centers; BOM + lines + routing ops; MO work orders; produce with lot; unbuild |
+| Finance | Wave 1–3 (`accounts`) | Invoices/bills; JE post/pay; credit notes/refunds; journal entries UI; AR/AP aging |
 | Sales | Wave 1 | Customers; quotation/order fields; confirm without stock out; deliver deducts stock |
 | Settings | Done | Users, roles, permissions, categories, taxes UI |
-| Masters | Wave 1+2 | UoM, currencies, payment terms, scrap/production locations, default work center |
+| Masters | Wave 1–2 | UoM, currencies, payment terms, scrap/production locations, default work center |
 
-## Later (Wave 3+)
+## Later (Wave 4+)
 
-- Lots/serials UI, routes/putaway sophistication
+- Routes/putaway sophistication, package types
 - Full multi-currency FX, bank reconciliation, fiscal positions
-- Work orders / routing depth, unbuild orders
 - Vendor/customer portal
+- Camera barcode (html5-qrcode) polish
 
 ## Concepts
 

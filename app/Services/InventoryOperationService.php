@@ -24,6 +24,7 @@ class InventoryOperationService
             'internal' => 'INT',
             'scrap' => 'SCR',
             'manufacture' => 'MFG',
+            'unbuild' => 'UNB',
         ];
         $prefix = ($map[$type] ?? 'STK').'-'.now()->format('Ymd').'-';
         $latest = StockOperation::query()
@@ -92,6 +93,7 @@ class InventoryOperationService
                 $operation->moves()->create([
                     'product_id' => (int) $line['product_id'],
                     'uom_id' => $line['uom_id'] ?? null,
+                    'lot_id' => $line['lot_id'] ?? null,
                     'demand_qty' => $qty,
                     'done_qty' => $qty,
                 ]);
@@ -257,10 +259,10 @@ class InventoryOperationService
                 }
 
                 if ($operation->source_location_id) {
-                    $this->applyQuantDelta($move->product_id, $operation->source_location_id, -$qty, $user, $operation);
+                    $this->applyQuantDelta($move->product_id, $operation->source_location_id, -$qty, $user, $operation, $move->lot_id);
                 }
                 if ($operation->destination_location_id) {
-                    $this->applyQuantDelta($move->product_id, $operation->destination_location_id, $qty, $user, $operation);
+                    $this->applyQuantDelta($move->product_id, $operation->destination_location_id, $qty, $user, $operation, $move->lot_id);
                 }
 
                 $this->syncProductStockCache($move->product_id);
@@ -282,10 +284,10 @@ class InventoryOperationService
         });
     }
 
-    protected function applyQuantDelta(int $productId, int $locationId, int $delta, User $user, StockOperation $operation): void
+    protected function applyQuantDelta(int $productId, int $locationId, int $delta, User $user, StockOperation $operation, ?int $lotId = null): void
     {
         $quant = StockQuant::query()->firstOrCreate(
-            ['product_id' => $productId, 'location_id' => $locationId],
+            ['product_id' => $productId, 'location_id' => $locationId, 'lot_id' => $lotId],
             ['quantity' => 0]
         );
 
@@ -307,7 +309,7 @@ class InventoryOperationService
             'balance_after' => max(0, $product->stock_qty + $delta),
             'reference_type' => StockOperation::class,
             'reference_id' => $operation->id,
-            'notes' => "{$operation->type} {$operation->number}",
+            'notes' => "{$operation->type} {$operation->number}".($lotId ? " lot#{$lotId}" : ''),
             'user_id' => $user->id,
         ]);
     }

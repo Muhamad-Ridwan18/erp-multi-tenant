@@ -51,6 +51,11 @@ class BillOfMaterial extends Model
         return $this->hasMany(BillOfMaterialLine::class)->orderBy('sort');
     }
 
+    public function operations(): HasMany
+    {
+        return $this->hasMany(BomOperation::class)->orderBy('sort');
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

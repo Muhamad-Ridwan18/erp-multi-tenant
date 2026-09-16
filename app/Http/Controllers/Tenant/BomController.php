@@ -53,6 +53,10 @@ class BomController extends Controller
             'lines.*.product_id' => ['required', Rule::exists(Product::class, 'id')],
             'lines.*.quantity' => ['required', 'integer', 'min:1'],
             'lines.*.uom_id' => ['nullable', 'integer'],
+            'operations' => ['nullable', 'array'],
+            'operations.*.name' => ['required_with:operations', 'string', 'max:150'],
+            'operations.*.work_center_id' => ['nullable', Rule::exists(WorkCenter::class, 'id')],
+            'operations.*.duration_minutes' => ['nullable', 'integer', 'min:0'],
         ]);
 
         foreach ($data['lines'] as $line) {
@@ -82,6 +86,18 @@ class BomController extends Controller
                 ]);
             }
 
+            foreach (array_values($data['operations'] ?? []) as $index => $operation) {
+                if (blank($operation['name'] ?? null)) {
+                    continue;
+                }
+                $bom->operations()->create([
+                    'name' => $operation['name'],
+                    'work_center_id' => $operation['work_center_id'] ?? $data['work_center_id'] ?? null,
+                    'duration_minutes' => (int) ($operation['duration_minutes'] ?? 0),
+                    'sort' => $index,
+                ]);
+            }
+
             return $bom;
         });
 
@@ -94,7 +110,7 @@ class BomController extends Controller
     {
         abort_unless($request->user()->can('manufacturing.boms.view'), 403);
 
-        $bom->load(['product', 'workCenter', 'lines.product', 'creator']);
+        $bom->load(['product', 'workCenter', 'lines.product', 'operations.workCenter', 'creator']);
 
         return view('tenant.boms.show', compact('bom'));
     }

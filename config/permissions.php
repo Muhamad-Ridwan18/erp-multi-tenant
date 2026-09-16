@@ -77,6 +77,8 @@ return [
         ['module' => 'inventory', 'resource' => 'order_points', 'action' => 'view', 'description' => 'View replenishment rules'],
         ['module' => 'inventory', 'resource' => 'order_points', 'action' => 'manage', 'description' => 'Manage replenishment rules'],
         ['module' => 'inventory', 'resource' => 'barcode', 'action' => 'scan', 'description' => 'Use barcode scanner'],
+        ['module' => 'inventory', 'resource' => 'lots', 'action' => 'view', 'description' => 'View lots / serials'],
+        ['module' => 'inventory', 'resource' => 'lots', 'action' => 'manage', 'description' => 'Manage lots / serials'],
 
         // Manufacturing (ref: Aureus manufacturing plugin)
         ['module' => 'manufacturing', 'resource' => 'work_centers', 'action' => 'view', 'description' => 'View work centers'],
@@ -89,12 +91,16 @@ return [
         ['module' => 'manufacturing', 'resource' => 'orders', 'action' => 'update', 'description' => 'Update manufacturing orders'],
         ['module' => 'manufacturing', 'resource' => 'orders', 'action' => 'confirm', 'description' => 'Confirm manufacturing orders'],
         ['module' => 'manufacturing', 'resource' => 'orders', 'action' => 'produce', 'description' => 'Produce manufacturing orders'],
+        ['module' => 'manufacturing', 'resource' => 'unbuilds', 'action' => 'view', 'description' => 'View unbuild orders'],
+        ['module' => 'manufacturing', 'resource' => 'unbuilds', 'action' => 'create', 'description' => 'Create unbuild orders'],
+        ['module' => 'manufacturing', 'resource' => 'unbuilds', 'action' => 'validate', 'description' => 'Validate unbuild orders'],
 
         // Finance config
         ['module' => 'finance', 'resource' => 'taxes', 'action' => 'view', 'description' => 'View taxes'],
         ['module' => 'finance', 'resource' => 'taxes', 'action' => 'manage', 'description' => 'Manage taxes'],
         ['module' => 'finance', 'resource' => 'journals', 'action' => 'view', 'description' => 'View journals'],
         ['module' => 'finance', 'resource' => 'accounts', 'action' => 'view', 'description' => 'View chart of accounts'],
+        ['module' => 'finance', 'resource' => 'aging', 'action' => 'view', 'description' => 'View AR/AP aging'],
 
         // Settings masters
         ['module' => 'settings', 'resource' => 'uoms', 'action' => 'view', 'description' => 'View units of measure'],

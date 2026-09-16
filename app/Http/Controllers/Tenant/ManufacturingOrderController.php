@@ -7,6 +7,7 @@ use App\Models\BillOfMaterial;
 use App\Models\ManufacturingOrder;
 use App\Models\Product;
 use App\Models\WorkCenter;
+use App\Models\WorkOrder;
 use App\Services\ManufacturingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -79,6 +80,7 @@ class ManufacturingOrderController extends Controller
             'workCenter',
             'components.product',
             'operations',
+            'workOrders.workCenter',
             'creator',
         ]);
 
@@ -104,15 +106,39 @@ class ManufacturingOrderController extends Controller
 
         $data = $request->validate([
             'quantity' => ['nullable', 'integer', 'min:1'],
+            'lot_name' => ['nullable', 'string', 'max:100'],
+            'lot_id' => ['nullable', 'integer'],
         ]);
 
         try {
-            $manufacturing->produce($manufacturingOrder, $request->user(), $data['quantity'] ?? null);
+            $manufacturing->produce(
+                $manufacturingOrder,
+                $request->user(),
+                $data['quantity'] ?? null,
+                [
+                    'lot_name' => $data['lot_name'] ?? null,
+                    'lot_id' => $data['lot_id'] ?? null,
+                ]
+            );
         } catch (Throwable $e) {
             return back()->withErrors(['order' => $e->getMessage()]);
         }
 
         return back()->with('status', 'Production completed.');
+    }
+
+    public function completeWorkOrder(Request $request, ManufacturingOrder $manufacturingOrder, WorkOrder $workOrder, ManufacturingService $manufacturing): RedirectResponse
+    {
+        abort_unless($request->user()->can('manufacturing.orders.produce'), 403);
+        abort_unless((int) $workOrder->manufacturing_order_id === (int) $manufacturingOrder->id, 404);
+
+        try {
+            $manufacturing->completeWorkOrder($workOrder);
+        } catch (InvalidArgumentException $e) {
+            return back()->withErrors(['order' => $e->getMessage()]);
+        }
+
+        return back()->with('status', "Work order {$workOrder->name} completed.");
     }
 
     public function cancel(Request $request, ManufacturingOrder $manufacturingOrder, ManufacturingService $manufacturing): RedirectResponse

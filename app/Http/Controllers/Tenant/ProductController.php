@@ -44,6 +44,7 @@ class ProductController extends Controller
             'sku' => ['required', 'string', 'max:50', Rule::unique(Product::class, 'sku')],
             'name' => ['required', 'string', 'max:150'],
             'type' => ['nullable', Rule::in(['goods', 'service'])],
+            'tracking' => ['nullable', Rule::in(['none', 'lot', 'serial'])],
             'barcode' => ['nullable', 'string', 'max:100'],
             'product_category_id' => ['nullable', Rule::exists(ProductCategory::class, 'id')],
             'description' => ['nullable', 'string'],
@@ -63,6 +64,7 @@ class ProductController extends Controller
         $product = Product::query()->create([
             ...$data,
             'type' => $data['type'] ?? 'goods',
+            'tracking' => $data['tracking'] ?? 'none',
             'unit' => ($data['unit'] ?? null) ?: 'pcs',
             'cost' => $data['cost'] ?? 0,
             'stock_qty' => 0,
@@ -97,6 +99,7 @@ class ProductController extends Controller
             'sku' => ['required', 'string', 'max:50', Rule::unique(Product::class, 'sku')->ignore($product->id)],
             'name' => ['required', 'string', 'max:150'],
             'type' => ['nullable', Rule::in(['goods', 'service'])],
+            'tracking' => ['nullable', Rule::in(['none', 'lot', 'serial'])],
             'barcode' => ['nullable', 'string', 'max:100'],
             'product_category_id' => ['nullable', Rule::exists(ProductCategory::class, 'id')],
             'description' => ['nullable', 'string'],
@@ -113,6 +116,7 @@ class ProductController extends Controller
         $product->update([
             ...$data,
             'type' => $data['type'] ?? $product->type ?? 'goods',
+            'tracking' => $data['tracking'] ?? $product->tracking ?? 'none',
             'unit' => ($data['unit'] ?? null) ?: ($product->unit ?: 'pcs'),
             'cost' => $data['cost'] ?? 0,
             'is_active' => $request->boolean('is_active'),

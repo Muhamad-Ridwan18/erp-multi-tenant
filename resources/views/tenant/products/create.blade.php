@@ -29,6 +29,15 @@
                             </x-select>
                         </div>
                         <div class="col-md-6">
+                            <x-select label="Tracking" name="tracking" :searchable="false">
+                                <option value="none" @selected(old('tracking', 'none') === 'none')>No tracking</option>
+                                <option value="lot" @selected(old('tracking') === 'lot')>By lots</option>
+                                <option value="serial" @selected(old('tracking') === 'serial')>By unique serial</option>
+                            </x-select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
                             <x-select label="Category" name="product_category_id" placeholder="Search category…">
                                 <option value="">No category</option>
                                 @foreach ($categories as $category)

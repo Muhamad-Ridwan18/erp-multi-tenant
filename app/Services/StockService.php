@@ -24,7 +24,7 @@ class StockService
 
         return DB::connection('tenant')->transaction(function () use ($product, $delta, $user, $notes, $location) {
             $quant = StockQuant::query()->firstOrCreate(
-                ['product_id' => $product->id, 'location_id' => $location->id],
+                ['product_id' => $product->id, 'location_id' => $location->id, 'lot_id' => null],
                 ['quantity' => 0]
             );
 

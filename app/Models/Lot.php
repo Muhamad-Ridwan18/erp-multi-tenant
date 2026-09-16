@@ -4,22 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class StockQuant extends Model
+class Lot extends Model
 {
     protected $connection = 'tenant';
 
     protected $fillable = [
+        'name',
+        'reference',
         'product_id',
-        'location_id',
-        'lot_id',
-        'quantity',
+        'expiration_date',
+        'notes',
+        'created_by',
     ];
 
     protected function casts(): array
     {
         return [
-            'quantity' => 'integer',
+            'expiration_date' => 'datetime',
         ];
     }
 
@@ -28,13 +31,13 @@ class StockQuant extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public function location(): BelongsTo
+    public function creator(): BelongsTo
     {
-        return $this->belongsTo(Location::class);
+        return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function lot(): BelongsTo
+    public function stockQuants(): HasMany
     {
-        return $this->belongsTo(Lot::class);
+        return $this->hasMany(StockQuant::class);
     }
 }

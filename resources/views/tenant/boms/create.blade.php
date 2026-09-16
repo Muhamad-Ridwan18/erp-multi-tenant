@@ -91,6 +91,43 @@
                         </table>
                     </div>
                 </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h3 class="card-title">Operations (routing)</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Work center</th>
+                                    <th style="width: 8rem">Minutes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for ($i = 0; $i < 2; $i++)
+                                    <tr>
+                                        <td>
+                                            <input type="text" name="operations[{{ $i }}][name]" class="form-control" value="{{ old("operations.$i.name") }}" placeholder="e.g. Assemble">
+                                        </td>
+                                        <td>
+                                            <select name="operations[{{ $i }}][work_center_id]" class="form-select">
+                                                <option value="">Default</option>
+                                                @foreach ($workCenters as $center)
+                                                    <option value="{{ $center->id }}" @selected((string) old("operations.$i.work_center_id") === (string) $center->id)>{{ $center->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="number" name="operations[{{ $i }}][duration_minutes]" class="form-control" min="0" value="{{ old("operations.$i.duration_minutes", 0) }}">
+                                        </td>
+                                    </tr>
+                                @endfor
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
             <div class="col-lg-4">
                 <x-card>
