@@ -13,6 +13,7 @@ use App\Models\TaxGroup;
 use App\Models\Uom;
 use App\Models\UomCategory;
 use App\Models\Warehouse;
+use App\Models\WorkCenter;
 use Illuminate\Database\Seeder;
 
 class MasterDataSeeder extends Seeder
@@ -96,6 +97,19 @@ class MasterDataSeeder extends Seeder
         Location::query()->updateOrCreate(
             ['warehouse_id' => null, 'code' => 'CUSTOMERS'],
             ['name' => 'Customers', 'type' => 'customer', 'is_active' => true]
+        );
+        Location::query()->updateOrCreate(
+            ['warehouse_id' => null, 'code' => 'SCRAP'],
+            ['name' => 'Scrap', 'type' => 'inventory', 'is_active' => true]
+        );
+        Location::query()->updateOrCreate(
+            ['warehouse_id' => null, 'code' => 'PRODUCTION'],
+            ['name' => 'Production', 'type' => 'production', 'is_active' => true]
+        );
+
+        WorkCenter::query()->updateOrCreate(
+            ['code' => 'WC01'],
+            ['name' => 'Assembly', 'default_capacity' => 1, 'is_active' => true]
         );
 
         unset($idr, $pcs, $ar, $ap, $taxOut, $taxIn);

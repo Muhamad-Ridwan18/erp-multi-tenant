@@ -20,6 +20,7 @@ class StockOperation extends Model
         'partner_vendor_id',
         'sales_order_id',
         'purchase_order_id',
+        'manufacturing_order_id',
         'origin',
         'notes',
         'scheduled_at',
@@ -63,6 +64,11 @@ class StockOperation extends Model
     public function purchaseOrder(): BelongsTo
     {
         return $this->belongsTo(PurchaseOrder::class);
+    }
+
+    public function manufacturingOrder(): BelongsTo
+    {
+        return $this->belongsTo(ManufacturingOrder::class);
     }
 
     public function creator(): BelongsTo

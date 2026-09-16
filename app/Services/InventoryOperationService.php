@@ -18,7 +18,13 @@ class InventoryOperationService
 {
     public function nextNumber(string $type): string
     {
-        $map = ['receipt' => 'IN', 'delivery' => 'OUT', 'internal' => 'INT'];
+        $map = [
+            'receipt' => 'IN',
+            'delivery' => 'OUT',
+            'internal' => 'INT',
+            'scrap' => 'SCR',
+            'manufacture' => 'MFG',
+        ];
         $prefix = ($map[$type] ?? 'STK').'-'.now()->format('Ymd').'-';
         $latest = StockOperation::query()
             ->where('number', 'like', $prefix.'%')
@@ -42,6 +48,76 @@ class InventoryOperationService
     public function customerLocation(): Location
     {
         return Location::query()->where('code', 'CUSTOMERS')->firstOrFail();
+    }
+
+    public function scrapLocation(): Location
+    {
+        return Location::query()->firstOrCreate(
+            ['code' => 'SCRAP', 'warehouse_id' => null],
+            ['name' => 'Scrap', 'type' => 'inventory', 'is_active' => true]
+        );
+    }
+
+    /**
+     * @param  array<int, array{product_id:int, quantity:int, uom_id?:int|null}>  $lines
+     */
+    public function createSimpleOperation(
+        string $type,
+        Location $source,
+        Location $destination,
+        array $lines,
+        User $user,
+        ?string $origin = null,
+        ?int $manufacturingOrderId = null,
+        ?string $notes = null,
+    ): StockOperation {
+        return DB::connection('tenant')->transaction(function () use ($type, $source, $destination, $lines, $user, $origin, $manufacturingOrderId, $notes) {
+            $operation = StockOperation::query()->create([
+                'number' => $this->nextNumber($type),
+                'type' => $type,
+                'status' => 'draft',
+                'source_location_id' => $source->id,
+                'destination_location_id' => $destination->id,
+                'manufacturing_order_id' => $manufacturingOrderId,
+                'origin' => $origin,
+                'notes' => $notes,
+                'created_by' => $user->id,
+            ]);
+
+            foreach ($lines as $line) {
+                $qty = (int) ($line['quantity'] ?? 0);
+                if ($qty <= 0) {
+                    continue;
+                }
+                $operation->moves()->create([
+                    'product_id' => (int) $line['product_id'],
+                    'uom_id' => $line['uom_id'] ?? null,
+                    'demand_qty' => $qty,
+                    'done_qty' => $qty,
+                ]);
+            }
+
+            if ($operation->moves()->doesntExist()) {
+                throw new InvalidArgumentException('No quantities for stock operation.');
+            }
+
+            return $this->validate($operation->fresh('moves'), $user);
+        });
+    }
+
+    /**
+     * @param  array<int, array{product_id:int, quantity:int, uom_id?:int|null}>  $lines
+     */
+    public function createScrap(array $lines, User $user, ?Location $source = null, ?string $notes = null): StockOperation
+    {
+        return $this->createSimpleOperation(
+            type: 'scrap',
+            source: $source ?? $this->stockLocation(),
+            destination: $this->scrapLocation(),
+            lines: $lines,
+            user: $user,
+            notes: $notes ?? 'Scrap',
+        );
     }
 
     /**

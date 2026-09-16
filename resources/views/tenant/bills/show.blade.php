@@ -33,6 +33,14 @@
                     </form>
                 @endcan
             @endif
+            @if ($bill->isPosted() && ! $bill->isRefund() && ! $bill->isReversed())
+                @can('finance.bills.create')
+                    <form method="POST" action="{{ route('tenant.bills.refund', $bill) }}" onsubmit="return confirm('Create and post a vendor refund for this bill?')">
+                        @csrf
+                        <x-button type="submit" variant="ghost">Refund</x-button>
+                    </form>
+                @endcan
+            @endif
             <x-button href="{{ route('tenant.bills.index') }}" variant="ghost">Back</x-button>
         </div>
     </div>

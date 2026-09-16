@@ -136,6 +136,21 @@ class BillController extends Controller
         return back()->with('status', 'Payment recorded.');
     }
 
+    public function refund(Request $request, Bill $bill, FinanceService $finance): RedirectResponse
+    {
+        abort_unless($request->user()->can('finance.bills.create'), 403);
+
+        try {
+            $refund = $finance->createRefundFromBill($bill, $request->user());
+        } catch (InvalidArgumentException $e) {
+            return back()->withErrors(['bill' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('tenant.bills.show', $refund)
+            ->with('status', 'Vendor refund posted.');
+    }
+
     public function destroy(Request $request, Bill $bill): RedirectResponse
     {
         abort_unless($request->user()->can('finance.bills.delete'), 403);

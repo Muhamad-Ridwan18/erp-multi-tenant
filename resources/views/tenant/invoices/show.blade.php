@@ -33,6 +33,14 @@
                     </form>
                 @endcan
             @endif
+            @if ($invoice->isPosted() && ! $invoice->isCreditNote() && ! $invoice->isReversed())
+                @can('finance.invoices.create')
+                    <form method="POST" action="{{ route('tenant.invoices.credit-note', $invoice) }}" onsubmit="return confirm('Create and post a credit note for this invoice?')">
+                        @csrf
+                        <x-button type="submit" variant="ghost">Credit note</x-button>
+                    </form>
+                @endcan
+            @endif
             <x-button href="{{ route('tenant.invoices.index') }}" variant="ghost">Back</x-button>
         </div>
     </div>

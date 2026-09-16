@@ -104,5 +104,6 @@
         </div>
     </div>
 @endauth
+@stack('scripts')
 </body>
 </html>

@@ -2,7 +2,7 @@
 
 Multi-tenant ERP foundation with **DB-per-tenant** and **subdomain** routing.
 
-Reference ERP: **AureusERP** at `D:\DEV\Daksa\erp` (plugins `purchases`, `inventories`, `sales`, `accounts`).
+Reference ERP: **AureusERP** at `D:\DEV\Daksa\erp` (plugins `purchases`, `inventories`, `sales`, `accounts`, `manufacturing`, `barcode`).
 
 ## Four mandatory business modules
 
@@ -20,6 +20,7 @@ Sales order confirm  → delivery / stock out
 Purchase order confirm → goods receipt / stock in (partial OK)
 Sales invoicing      → customer invoice (finance) → post JE → pay
 PO billing           → vendor bill (finance) → post JE → pay
+Manufacturing        → BOM → MO confirm/produce → consume components + receive FG
 ```
 
 ## Admin UI shell
@@ -40,23 +41,23 @@ Document forms mimic Aureus patterns:
 - Inline create customer/vendor from SO/PO forms
 - Product form: type, barcode, category, UoM, cost, sales price
 
-## Current implementation status (Wave 1)
+## Current implementation status
 
 | Module | Status | Notes |
 |--------|--------|-------|
 | Procurement | Wave 1 | Vendors; PO draft→sent→confirm; partial receive via stock ops; bill from received qty |
-| Inventory | Wave 1 | Products (Aureus fields); warehouses/locations; stock quants; receipt/delivery/internal ops |
-| Finance | Wave 1 (`accounts`) | Manual + SO/PO-linked invoices/bills; taxes; CoA; journals; post writes JE; payments |
+| Inventory | Wave 1+2 | Products; warehouses/locations; stock quants; receipt/delivery/internal; scrap; order points; barcode scan |
+| Manufacturing | Wave 2 | Work centers; BOM + lines; MO draft→confirm→produce (consume components, receive FG) |
+| Finance | Wave 1+2 (`accounts`) | Manual + SO/PO-linked invoices/bills; taxes; CoA; journals; post JE; payments; credit notes / vendor refunds |
 | Sales | Wave 1 | Customers; quotation/order fields; confirm without stock out; deliver deducts stock |
 | Settings | Done | Users, roles, permissions, categories, taxes UI |
-| Masters | Wave 1 | UoM, currencies, payment terms, seeded on tenant provision |
+| Masters | Wave 1+2 | UoM, currencies, payment terms, scrap/production locations, default work center |
 
-## Out of Wave 1 (later)
+## Later (Wave 3+)
 
-- Manufacturing, barcode
-- Routes/putaway/replenishment depth, lots/serials UI
+- Lots/serials UI, routes/putaway sophistication
 - Full multi-currency FX, bank reconciliation, fiscal positions
-- Credit notes / refunds UI polish
+- Work orders / routing depth, unbuild orders
 - Vendor/customer portal
 
 ## Concepts

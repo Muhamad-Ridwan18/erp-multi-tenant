@@ -8,6 +8,7 @@ return [
     'modules' => [
         'procurement' => 'Procurement',
         'inventory' => 'Inventory',
+        'manufacturing' => 'Manufacturing',
         'finance' => 'Finance',
         'sales' => 'Sales',
         'settings' => 'Settings',
@@ -71,6 +72,23 @@ return [
         ['module' => 'inventory', 'resource' => 'operations', 'action' => 'view', 'description' => 'View stock operations'],
         ['module' => 'inventory', 'resource' => 'operations', 'action' => 'create', 'description' => 'Create stock operations'],
         ['module' => 'inventory', 'resource' => 'operations', 'action' => 'validate', 'description' => 'Validate stock operations'],
+        ['module' => 'inventory', 'resource' => 'scraps', 'action' => 'view', 'description' => 'View scraps'],
+        ['module' => 'inventory', 'resource' => 'scraps', 'action' => 'create', 'description' => 'Create scraps'],
+        ['module' => 'inventory', 'resource' => 'order_points', 'action' => 'view', 'description' => 'View replenishment rules'],
+        ['module' => 'inventory', 'resource' => 'order_points', 'action' => 'manage', 'description' => 'Manage replenishment rules'],
+        ['module' => 'inventory', 'resource' => 'barcode', 'action' => 'scan', 'description' => 'Use barcode scanner'],
+
+        // Manufacturing (ref: Aureus manufacturing plugin)
+        ['module' => 'manufacturing', 'resource' => 'work_centers', 'action' => 'view', 'description' => 'View work centers'],
+        ['module' => 'manufacturing', 'resource' => 'work_centers', 'action' => 'manage', 'description' => 'Manage work centers'],
+        ['module' => 'manufacturing', 'resource' => 'boms', 'action' => 'view', 'description' => 'View bills of materials'],
+        ['module' => 'manufacturing', 'resource' => 'boms', 'action' => 'create', 'description' => 'Create bills of materials'],
+        ['module' => 'manufacturing', 'resource' => 'boms', 'action' => 'update', 'description' => 'Update bills of materials'],
+        ['module' => 'manufacturing', 'resource' => 'orders', 'action' => 'view', 'description' => 'View manufacturing orders'],
+        ['module' => 'manufacturing', 'resource' => 'orders', 'action' => 'create', 'description' => 'Create manufacturing orders'],
+        ['module' => 'manufacturing', 'resource' => 'orders', 'action' => 'update', 'description' => 'Update manufacturing orders'],
+        ['module' => 'manufacturing', 'resource' => 'orders', 'action' => 'confirm', 'description' => 'Confirm manufacturing orders'],
+        ['module' => 'manufacturing', 'resource' => 'orders', 'action' => 'produce', 'description' => 'Produce manufacturing orders'],
 
         // Finance config
         ['module' => 'finance', 'resource' => 'taxes', 'action' => 'view', 'description' => 'View taxes'],

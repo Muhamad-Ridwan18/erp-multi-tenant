@@ -136,6 +136,21 @@ class InvoiceController extends Controller
         return back()->with('status', 'Payment recorded.');
     }
 
+    public function creditNote(Request $request, Invoice $invoice, FinanceService $finance): RedirectResponse
+    {
+        abort_unless($request->user()->can('finance.invoices.create'), 403);
+
+        try {
+            $credit = $finance->createCreditNoteFromInvoice($invoice, $request->user());
+        } catch (InvalidArgumentException $e) {
+            return back()->withErrors(['invoice' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('tenant.invoices.show', $credit)
+            ->with('status', 'Credit note posted.');
+    }
+
     public function destroy(Request $request, Invoice $invoice): RedirectResponse
     {
         abort_unless($request->user()->can('finance.invoices.delete'), 403);

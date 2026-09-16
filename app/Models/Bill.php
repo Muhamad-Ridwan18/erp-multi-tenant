@@ -12,8 +12,10 @@ class Bill extends Model
 
     protected $fillable = [
         'number',
+        'move_type',
         'vendor_id',
         'purchase_order_id',
+        'reversed_bill_id',
         'bill_date',
         'due_date',
         'payment_term_id',
@@ -55,6 +57,26 @@ class Bill extends Model
     public function purchaseOrder(): BelongsTo
     {
         return $this->belongsTo(PurchaseOrder::class);
+    }
+
+    public function reversedBill(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'reversed_bill_id');
+    }
+
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(self::class, 'reversed_bill_id');
+    }
+
+    public function isRefund(): bool
+    {
+        return $this->move_type === 'in_refund';
+    }
+
+    public function isReversed(): bool
+    {
+        return $this->status === 'reversed';
     }
 
     public function paymentTerm(): BelongsTo

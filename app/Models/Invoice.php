@@ -12,8 +12,10 @@ class Invoice extends Model
 
     protected $fillable = [
         'number',
+        'move_type',
         'customer_id',
         'sales_order_id',
+        'reversed_invoice_id',
         'invoice_date',
         'due_date',
         'payment_term_id',
@@ -55,6 +57,26 @@ class Invoice extends Model
     public function salesOrder(): BelongsTo
     {
         return $this->belongsTo(SalesOrder::class);
+    }
+
+    public function reversedInvoice(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'reversed_invoice_id');
+    }
+
+    public function creditNotes(): HasMany
+    {
+        return $this->hasMany(self::class, 'reversed_invoice_id');
+    }
+
+    public function isCreditNote(): bool
+    {
+        return $this->move_type === 'out_refund';
+    }
+
+    public function isReversed(): bool
+    {
+        return $this->status === 'reversed';
     }
 
     public function paymentTerm(): BelongsTo

@@ -59,7 +59,7 @@
                         </li>
                     @endcan
 
-                    @canany(['sales.customers.view', 'sales.orders.view', 'inventory.products.view', 'inventory.warehouses.view', 'inventory.operations.view'])
+                    @canany(['sales.customers.view', 'sales.orders.view', 'inventory.products.view', 'inventory.warehouses.view', 'inventory.operations.view', 'inventory.scraps.view', 'inventory.barcode.scan'])
                         <li class="nav-section-title">Sales &amp; Inventory</li>
                     @endcanany
                     @can('sales.customers.view')
@@ -99,6 +99,58 @@
                             <a class="nav-link {{ request()->routeIs('tenant.operations.*') ? 'active' : '' }}" href="{{ route('tenant.operations.index') }}">
                                 <span class="nav-link-icon"><i class="ti ti-arrows-exchange"></i></span>
                                 <span class="nav-link-title">Operations</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('inventory.scraps.view')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('tenant.scraps.*') ? 'active' : '' }}" href="{{ route('tenant.scraps.index') }}">
+                                <span class="nav-link-icon"><i class="ti ti-trash"></i></span>
+                                <span class="nav-link-title">Scraps</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('inventory.order_points.view')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('tenant.order-points.*') ? 'active' : '' }}" href="{{ route('tenant.order-points.index') }}">
+                                <span class="nav-link-icon"><i class="ti ti-recharging"></i></span>
+                                <span class="nav-link-title">Replenishment</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('inventory.barcode.scan')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('tenant.barcode.*') ? 'active' : '' }}" href="{{ route('tenant.barcode.index') }}">
+                                <span class="nav-link-icon"><i class="ti ti-barcode"></i></span>
+                                <span class="nav-link-title">Barcode</span>
+                            </a>
+                        </li>
+                    @endcan
+
+                    @canany(['manufacturing.orders.view', 'manufacturing.boms.view', 'manufacturing.work_centers.view'])
+                        <li class="nav-section-title">Manufacturing</li>
+                    @endcanany
+                    @can('manufacturing.orders.view')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('tenant.manufacturing-orders.*') ? 'active' : '' }}" href="{{ route('tenant.manufacturing-orders.index') }}">
+                                <span class="nav-link-icon"><i class="ti ti-building-factory-2"></i></span>
+                                <span class="nav-link-title">Manufacturing orders</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('manufacturing.boms.view')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('tenant.boms.*') ? 'active' : '' }}" href="{{ route('tenant.boms.index') }}">
+                                <span class="nav-link-icon"><i class="ti ti-list-details"></i></span>
+                                <span class="nav-link-title">Bills of materials</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('manufacturing.work_centers.view')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('tenant.work-centers.*') ? 'active' : '' }}" href="{{ route('tenant.work-centers.index') }}">
+                                <span class="nav-link-icon"><i class="ti ti-topology-star-3"></i></span>
+                                <span class="nav-link-title">Work centers</span>
                             </a>
                         </li>
                     @endcan

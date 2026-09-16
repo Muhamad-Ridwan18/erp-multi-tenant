@@ -3,19 +3,25 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Platform\TenantController;
+use App\Http\Controllers\Tenant\BarcodeController;
 use App\Http\Controllers\Tenant\BillController;
+use App\Http\Controllers\Tenant\BomController;
 use App\Http\Controllers\Tenant\CustomerController;
 use App\Http\Controllers\Tenant\InvoiceController;
+use App\Http\Controllers\Tenant\ManufacturingOrderController;
+use App\Http\Controllers\Tenant\OrderPointController;
 use App\Http\Controllers\Tenant\ProductCategoryController;
 use App\Http\Controllers\Tenant\ProductController;
 use App\Http\Controllers\Tenant\PurchaseOrderController;
 use App\Http\Controllers\Tenant\RoleController;
 use App\Http\Controllers\Tenant\SalesOrderController;
+use App\Http\Controllers\Tenant\ScrapController;
 use App\Http\Controllers\Tenant\StockOperationController;
 use App\Http\Controllers\Tenant\TaxController;
 use App\Http\Controllers\Tenant\UserController;
 use App\Http\Controllers\Tenant\VendorController;
 use App\Http\Controllers\Tenant\WarehouseController;
+use App\Http\Controllers\Tenant\WorkCenterController;
 use App\Support\TenantContext;
 use Illuminate\Support\Facades\Route;
 
@@ -87,6 +93,37 @@ Route::middleware(['auth', 'tenant.domain'])->group(function () {
 
         Route::get('/operations', [StockOperationController::class, 'index'])->name('operations.index');
         Route::get('/operations/{operation}', [StockOperationController::class, 'show'])->name('operations.show');
+
+        Route::get('/scraps', [ScrapController::class, 'index'])->name('scraps.index');
+        Route::get('/scraps/create', [ScrapController::class, 'create'])->name('scraps.create');
+        Route::post('/scraps', [ScrapController::class, 'store'])->name('scraps.store');
+
+        Route::get('/order-points', [OrderPointController::class, 'index'])->name('order-points.index');
+        Route::post('/order-points', [OrderPointController::class, 'store'])->name('order-points.store');
+        Route::post('/order-points/{orderPoint}/replenish', [OrderPointController::class, 'replenish'])->name('order-points.replenish');
+
+        Route::get('/barcode', [BarcodeController::class, 'index'])->name('barcode.index');
+        Route::get('/barcode/lookup', [BarcodeController::class, 'lookup'])->name('barcode.lookup');
+        Route::post('/barcode/adjust', [BarcodeController::class, 'adjust'])->name('barcode.adjust');
+        Route::post('/barcode/scrap', [BarcodeController::class, 'scrap'])->name('barcode.scrap');
+    });
+
+    Route::prefix('manufacturing')->name('tenant.')->group(function () {
+        Route::get('/work-centers', [WorkCenterController::class, 'index'])->name('work-centers.index');
+        Route::post('/work-centers', [WorkCenterController::class, 'store'])->name('work-centers.store');
+
+        Route::get('/boms', [BomController::class, 'index'])->name('boms.index');
+        Route::get('/boms/create', [BomController::class, 'create'])->name('boms.create');
+        Route::post('/boms', [BomController::class, 'store'])->name('boms.store');
+        Route::get('/boms/{bom}', [BomController::class, 'show'])->name('boms.show');
+
+        Route::get('/orders', [ManufacturingOrderController::class, 'index'])->name('manufacturing-orders.index');
+        Route::get('/orders/create', [ManufacturingOrderController::class, 'create'])->name('manufacturing-orders.create');
+        Route::post('/orders', [ManufacturingOrderController::class, 'store'])->name('manufacturing-orders.store');
+        Route::get('/orders/{manufacturingOrder}', [ManufacturingOrderController::class, 'show'])->name('manufacturing-orders.show');
+        Route::post('/orders/{manufacturingOrder}/confirm', [ManufacturingOrderController::class, 'confirm'])->name('manufacturing-orders.confirm');
+        Route::post('/orders/{manufacturingOrder}/produce', [ManufacturingOrderController::class, 'produce'])->name('manufacturing-orders.produce');
+        Route::post('/orders/{manufacturingOrder}/cancel', [ManufacturingOrderController::class, 'cancel'])->name('manufacturing-orders.cancel');
     });
 
     Route::prefix('sales')->name('tenant.')->group(function () {
@@ -115,6 +152,7 @@ Route::middleware(['auth', 'tenant.domain'])->group(function () {
         Route::post('/invoices/from-order/{order}', [InvoiceController::class, 'storeFromOrder'])->name('invoices.from-order');
         Route::post('/invoices/{invoice}/post', [InvoiceController::class, 'post'])->name('invoices.post');
         Route::post('/invoices/{invoice}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
+        Route::post('/invoices/{invoice}/credit-note', [InvoiceController::class, 'creditNote'])->name('invoices.credit-note');
         Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
 
         Route::get('/bills', [BillController::class, 'index'])->name('bills.index');
@@ -124,6 +162,7 @@ Route::middleware(['auth', 'tenant.domain'])->group(function () {
         Route::post('/bills/from-purchase/{purchase}', [BillController::class, 'storeFromPurchase'])->name('bills.from-purchase');
         Route::post('/bills/{bill}/post', [BillController::class, 'post'])->name('bills.post');
         Route::post('/bills/{bill}/pay', [BillController::class, 'pay'])->name('bills.pay');
+        Route::post('/bills/{bill}/refund', [BillController::class, 'refund'])->name('bills.refund');
         Route::delete('/bills/{bill}', [BillController::class, 'destroy'])->name('bills.destroy');
 
         Route::get('/taxes', [TaxController::class, 'index'])->name('taxes.index');
